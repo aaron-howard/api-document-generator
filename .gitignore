@@ -438,6 +438,7 @@ TASK-RECORD-*.md
 
 # Project completion summaries (generated)
 PROJECT-COMPLETION-*.md
+!PROJECT-COMPLETION-FINAL.md
 
 # =============================================================================
 # Performance / Monitoring
