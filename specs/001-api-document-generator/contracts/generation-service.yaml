@@ -1,0 +1,851 @@
+openapi: 3.0.3
+info:
+  title: Generation Service API
+  description: Internal service API for generating documentation in various output formats
+  version: 1.0.0
+
+paths:
+  /generate:
+    post:
+      summary: Generate documentation
+      description: Generate documentation in specified format from processed content
+      operationId: generateDocumentation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerationRequest'
+            examples:
+              markdown_generation:
+                summary: Generate Markdown documentation
+                value:
+                  format: "markdown"
+                  template: "default"
+                  content:
+                    project:
+                      name: "User Management API"
+                      version: "1.0.0"
+                      description: "RESTful API for user management operations"
+                    endpoints:
+                      - path: "/users"
+                        method: "GET"
+                        summary: "Get all users"
+                        enhancedDescription: "Retrieves a paginated list of all users in the system. Supports filtering and sorting options."
+                        parameters:
+                          - name: "page"
+                            in: "query"
+                            description: "Page number for pagination"
+                            schema:
+                              type: "integer"
+                              default: 1
+                        responses:
+                          - status: "200"
+                            description: "Successfully retrieved users"
+                            content:
+                              "application/json":
+                                schema:
+                                  type: "array"
+                                  items:
+                                    $ref: "#/components/schemas/User"
+                  options:
+                    theme: "default"
+                    includeTableOfContents: true
+                    includeExamples: true
+                    outputPath: "./docs/api.md"
+      responses:
+        '200':
+          description: Documentation generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResponse'
+              examples:
+                success:
+                  summary: Successful generation
+                  value:
+                    generationId: "gen_123456789"
+                    status: "success"
+                    outputPath: "./docs/api.md"
+                    fileSize: 25600
+                    generatedAt: "2024-01-15T10:30:00Z"
+                    metrics:
+                      processedEndpoints: 15
+                      generatedPages: 3
+                      generationTime: 2.5
+                      templateRenderTime: 0.8
+                    warnings: []
+        '400':
+          description: Invalid generation request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationError'
+              examples:
+                invalid_template:
+                  summary: Invalid template specified
+                  value:
+                    status: "error"
+                    code: "INVALID_TEMPLATE"
+                    message: "Template 'custom-theme' not found"
+                    details:
+                      availableTemplates: ["default", "minimal", "detailed"]
+                      suggestions:
+                        - "Use one of the available templates"
+                        - "Check template name spelling"
+        '500':
+          description: Internal generation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationError'
+
+  /render:
+    post:
+      summary: Render template with data
+      description: Render a specific template with provided data without full generation pipeline
+      operationId: renderTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenderRequest'
+      responses:
+        '200':
+          description: Template rendered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderResponse'
+        '400':
+          description: Invalid render request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationError'
+
+  /templates:
+    get:
+      summary: List available templates
+      description: Get list of available templates for each output format
+      operationId: listTemplates
+      parameters:
+        - name: format
+          in: query
+          description: Filter templates by output format
+          schema:
+            type: string
+            enum: ["markdown", "html", "pdf", "json"]
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateListResponse'
+
+  /preview:
+    post:
+      summary: Generate preview of documentation
+      description: Generate a preview of documentation without saving to file
+      operationId: previewDocumentation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+      responses:
+        '200':
+          description: Preview generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResponse'
+        '400':
+          description: Invalid preview request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationError'
+
+  /validate:
+    post:
+      summary: Validate generation configuration
+      description: Validate generation request before actual generation
+      operationId: validateGeneration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+
+components:
+  schemas:
+    GenerationRequest:
+      type: object
+      required:
+        - format
+        - content
+      properties:
+        format:
+          type: string
+          enum: ["markdown", "html", "pdf", "json"]
+          description: "Output format for documentation"
+        template:
+          type: string
+          default: "default"
+          description: "Template to use for generation"
+        content:
+          $ref: '#/components/schemas/DocumentationContent'
+        options:
+          $ref: '#/components/schemas/GenerationOptions'
+
+    DocumentationContent:
+      type: object
+      required:
+        - project
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectInfo'
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessedEndpoint'
+        schemas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessedSchema'
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessedComponent'
+        metadata:
+          type: object
+          additionalProperties: true
+          description: "Additional metadata for documentation"
+
+    ProjectInfo:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        version:
+          type: string
+          pattern: '^\\d+\\.\\d+\\.\\d+.*$'
+        description:
+          type: string
+          maxLength: 1000
+        baseUrl:
+          type: string
+          format: uri
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+        license:
+          $ref: '#/components/schemas/LicenseInfo'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagInfo'
+
+    ContactInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        url:
+          type: string
+          format: uri
+
+    LicenseInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+
+    TagInfo:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    ProcessedEndpoint:
+      type: object
+      required:
+        - path
+        - method
+      properties:
+        path:
+          type: string
+        method:
+          type: string
+          enum: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+        summary:
+          type: string
+        description:
+          type: string
+        enhancedDescription:
+          type: string
+          description: "AI-enhanced description"
+        operationId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessedParameter'
+        requestBody:
+          $ref: '#/components/schemas/ProcessedRequestBody'
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessedResponse'
+        security:
+          type: array
+          items:
+            type: object
+        deprecated:
+          type: boolean
+        examples:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointExample'
+        codeSamples:
+          type: array
+          items:
+            $ref: '#/components/schemas/CodeSample'
+        useCases:
+          type: array
+          items:
+            type: string
+        bestPractices:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+
+    ProcessedParameter:
+      type: object
+      required:
+        - name
+        - in
+      properties:
+        name:
+          type: string
+        in:
+          type: string
+          enum: ["query", "header", "path", "cookie"]
+        description:
+          type: string
+        required:
+          type: boolean
+        schema:
+          $ref: '#/components/schemas/ProcessedSchema'
+        example:
+          description: "Example value"
+        examples:
+          type: array
+          items:
+            type: object
+
+    ProcessedRequestBody:
+      type: object
+      properties:
+        description:
+          type: string
+        required:
+          type: boolean
+        content:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProcessedMediaType'
+
+    ProcessedResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+        description:
+          type: string
+        content:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProcessedMediaType'
+        headers:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProcessedHeader'
+
+    ProcessedMediaType:
+      type: object
+      properties:
+        schema:
+          $ref: '#/components/schemas/ProcessedSchema'
+        examples:
+          type: object
+          additionalProperties: true
+        encoding:
+          type: object
+          additionalProperties: true
+
+    ProcessedHeader:
+      type: object
+      properties:
+        description:
+          type: string
+        required:
+          type: boolean
+        schema:
+          $ref: '#/components/schemas/ProcessedSchema'
+
+    ProcessedSchema:
+      type: object
+      properties:
+        type:
+          type: string
+        format:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProcessedSchema'
+        items:
+          $ref: '#/components/schemas/ProcessedSchema'
+        required:
+          type: array
+          items:
+            type: string
+        enum:
+          type: array
+        example:
+          description: "Example value"
+        default:
+          description: "Default value"
+        minimum:
+          type: number
+        maximum:
+          type: number
+        minLength:
+          type: integer
+        maxLength:
+          type: integer
+        pattern:
+          type: string
+        ref:
+          type: string
+
+    ProcessedComponent:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: ["schema", "parameter", "response", "requestBody", "header", "securityScheme"]
+        definition:
+          type: object
+          additionalProperties: true
+        description:
+          type: string
+
+    EndpointExample:
+      type: object
+      required:
+        - description
+        - request
+        - response
+      properties:
+        description:
+          type: string
+        scenario:
+          type: string
+        request:
+          $ref: '#/components/schemas/ExampleRequest'
+        response:
+          $ref: '#/components/schemas/ExampleResponse'
+
+    ExampleRequest:
+      type: object
+      required:
+        - method
+        - url
+      properties:
+        method:
+          type: string
+        url:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          description: "Request body (any type)"
+
+    ExampleResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          description: "Response body (any type)"
+
+    CodeSample:
+      type: object
+      required:
+        - language
+        - code
+      properties:
+        language:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        framework:
+          type: string
+
+    GenerationOptions:
+      type: object
+      properties:
+        theme:
+          type: string
+          default: "default"
+          description: "Visual theme for output"
+        includeTableOfContents:
+          type: boolean
+          default: true
+        includeExamples:
+          type: boolean
+          default: true
+        includeCodeSamples:
+          type: boolean
+          default: true
+        includeBestPractices:
+          type: boolean
+          default: true
+        outputPath:
+          type: string
+          description: "Output file path"
+        splitByTags:
+          type: boolean
+          default: false
+          description: "Split documentation by tags into separate files"
+        customCSS:
+          type: string
+          description: "Custom CSS for HTML output"
+        pageSize:
+          type: string
+          enum: ["A4", "Letter", "Legal"]
+          default: "A4"
+          description: "Page size for PDF output"
+        templateVariables:
+          type: object
+          additionalProperties: true
+          description: "Custom variables for template rendering"
+
+    GenerationResponse:
+      type: object
+      required:
+        - generationId
+        - status
+      properties:
+        generationId:
+          type: string
+        status:
+          type: string
+          enum: ["success", "partial", "failed"]
+        outputPath:
+          type: string
+          description: "Path to generated documentation"
+        outputPaths:
+          type: array
+          items:
+            type: string
+          description: "Paths to generated files (if multiple)"
+        fileSize:
+          type: integer
+          description: "Size of generated file in bytes"
+        generatedAt:
+          type: string
+          format: date-time
+        metrics:
+          $ref: '#/components/schemas/GenerationMetrics'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenerationWarning'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenerationError'
+
+    GenerationMetrics:
+      type: object
+      properties:
+        processedEndpoints:
+          type: integer
+        generatedPages:
+          type: integer
+        generationTime:
+          type: number
+          description: "Total generation time in seconds"
+        templateRenderTime:
+          type: number
+          description: "Template rendering time in seconds"
+        outputFileSize:
+          type: integer
+          description: "Total output size in bytes"
+
+    RenderRequest:
+      type: object
+      required:
+        - template
+        - data
+      properties:
+        template:
+          type: string
+          description: "Template name or content"
+        data:
+          type: object
+          additionalProperties: true
+          description: "Data to render in template"
+        format:
+          type: string
+          enum: ["markdown", "html", "pdf", "json"]
+        options:
+          type: object
+          additionalProperties: true
+
+    RenderResponse:
+      type: object
+      required:
+        - renderId
+        - content
+      properties:
+        renderId:
+          type: string
+        content:
+          type: string
+          description: "Rendered content"
+        renderTime:
+          type: number
+          description: "Rendering time in seconds"
+
+    TemplateListResponse:
+      type: object
+      required:
+        - templates
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateInfo'
+
+    TemplateInfo:
+      type: object
+      required:
+        - name
+        - format
+      properties:
+        name:
+          type: string
+        format:
+          type: string
+          enum: ["markdown", "html", "pdf", "json"]
+        description:
+          type: string
+        version:
+          type: string
+        author:
+          type: string
+        customizable:
+          type: boolean
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateVariable'
+
+    TemplateVariable:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: ["string", "boolean", "number", "array", "object"]
+        description:
+          type: string
+        required:
+          type: boolean
+        default:
+          description: "Default value"
+
+    PreviewRequest:
+      type: object
+      required:
+        - format
+        - content
+      properties:
+        format:
+          type: string
+          enum: ["markdown", "html"]
+        content:
+          $ref: '#/components/schemas/DocumentationContent'
+        template:
+          type: string
+        options:
+          $ref: '#/components/schemas/GenerationOptions'
+        maxSize:
+          type: integer
+          description: "Maximum preview size in characters"
+          default: 10000
+
+    PreviewResponse:
+      type: object
+      required:
+        - previewId
+        - preview
+      properties:
+        previewId:
+          type: string
+        preview:
+          type: string
+          description: "Preview content (truncated if necessary)"
+        truncated:
+          type: boolean
+          description: "Whether preview was truncated"
+        fullSize:
+          type: integer
+          description: "Full content size in characters"
+
+    ValidationRequest:
+      type: object
+      required:
+        - format
+        - content
+      properties:
+        format:
+          type: string
+          enum: ["markdown", "html", "pdf", "json"]
+        content:
+          $ref: '#/components/schemas/DocumentationContent'
+        template:
+          type: string
+        options:
+          $ref: '#/components/schemas/GenerationOptions'
+
+    ValidationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+        estimatedSize:
+          type: integer
+          description: "Estimated output size in bytes"
+        estimatedTime:
+          type: number
+          description: "Estimated generation time in seconds"
+
+    ValidationIssue:
+      type: object
+      required:
+        - type
+        - message
+      properties:
+        type:
+          type: string
+          enum: ["error", "warning", "suggestion"]
+        message:
+          type: string
+        field:
+          type: string
+          description: "Related field or section"
+        suggestion:
+          type: string
+          description: "Suggested fix"
+
+    GenerationWarning:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        context:
+          type: string
+
+    GenerationError:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+        code:
+          type: string
+          enum: ["INVALID_TEMPLATE", "TEMPLATE_ERROR", "RENDER_ERROR", "OUTPUT_ERROR", "VALIDATION_ERROR"]
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

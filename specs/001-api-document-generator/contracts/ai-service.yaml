@@ -1,0 +1,718 @@
+openapi: 3.0.3
+info:
+  title: AI Service API
+  description: Internal service API for AI-powered documentation enhancement and summarization
+  version: 1.0.0
+
+paths:
+  /summarize:
+    post:
+      summary: Generate AI summary for API endpoint
+      description: Create intelligent summary and description for parsed API endpoints
+      operationId: summarizeEndpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SummarizeRequest'
+            examples:
+              basic_endpoint:
+                summary: Basic endpoint summarization
+                value:
+                  endpoint:
+                    path: "/users/{id}"
+                    method: "GET"
+                    summary: "Get user by ID"
+                    parameters:
+                      - name: "id"
+                        in: "path"
+                        required: true
+                        schema:
+                          type: "integer"
+                    responses:
+                      - status: "200"
+                        description: "User found"
+                        content:
+                          "application/json":
+                            schema:
+                              $ref: "#/components/schemas/User"
+                  context:
+                    projectName: "User Management API"
+                    version: "v1.0.0"
+                    relatedEndpoints: ["/users", "/users/{id}/profile"]
+                  options:
+                    includeExamples: true
+                    generateCodeSamples: true
+                    targetAudience: "developers"
+      responses:
+        '200':
+          description: Summary generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummarizeResponse'
+              examples:
+                success:
+                  summary: Successful summarization
+                  value:
+                    summaryId: "sum_123456789"
+                    enhancedSummary: "Retrieves detailed information for a specific user by their unique identifier. Returns user profile data including personal information, preferences, and account status."
+                    enhancedDescription: "This endpoint allows clients to fetch comprehensive user data using the user's unique ID. The response includes all publicly available user information such as name, email, registration date, and current account status. This endpoint is commonly used in user profile pages and administrative dashboards."
+                    useCases:
+                      - "Display user profile information"
+                      - "Admin user management"
+                      - "User verification processes"
+                    examples:
+                      - description: "Fetch user with ID 123"
+                        request:
+                          method: "GET"
+                          url: "/users/123"
+                        response:
+                          status: 200
+                          body:
+                            id: 123
+                            name: "John Doe"
+                            email: "john@example.com"
+                            status: "active"
+                    codeSamples:
+                      - language: "javascript"
+                        code: "const user = await fetch('/users/123').then(r => r.json());"
+                      - language: "python"
+                        code: "user = requests.get('/users/123').json()"
+                    confidence: 0.95
+                    processingTime: 1.2
+        '400':
+          description: Invalid summarization request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIError'
+              examples:
+                insufficient_data:
+                  summary: Insufficient endpoint data
+                  value:
+                    status: "error"
+                    code: "INSUFFICIENT_DATA"
+                    message: "Endpoint lacks sufficient information for meaningful summarization"
+                    details:
+                      missingFields: ["responses", "parameters"]
+                      suggestions:
+                        - "Provide response schemas"
+                        - "Include parameter descriptions"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIError'
+        '500':
+          description: AI service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIError'
+
+  /enhance:
+    post:
+      summary: Enhance documentation with AI insights
+      description: Improve existing documentation with AI-generated insights, examples, and best practices
+      operationId: enhanceDocumentation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhanceRequest'
+      responses:
+        '200':
+          description: Documentation enhanced successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhanceResponse'
+        '400':
+          description: Invalid enhancement request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIError'
+
+  /validate:
+    post:
+      summary: Validate AI-generated content
+      description: Validate and score AI-generated summaries and enhancements for quality and accuracy
+      operationId: validateContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateRequest'
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResponse'
+        '400':
+          description: Invalid validation request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIError'
+
+  /batch:
+    post:
+      summary: Process multiple endpoints in batch
+      description: Efficiently process multiple endpoints for summarization with optimized token usage
+      operationId: batchProcess
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+      responses:
+        '200':
+          description: Batch processing completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '400':
+          description: Invalid batch request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIError'
+
+components:
+  schemas:
+    SummarizeRequest:
+      type: object
+      required:
+        - endpoint
+      properties:
+        endpoint:
+          $ref: '#/components/schemas/EndpointData'
+        context:
+          $ref: '#/components/schemas/ProjectContext'
+        options:
+          $ref: '#/components/schemas/SummarizationOptions'
+
+    EndpointData:
+      type: object
+      required:
+        - path
+        - method
+      properties:
+        path:
+          type: string
+          description: "API endpoint path"
+        method:
+          type: string
+          enum: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+        summary:
+          type: string
+          description: "Existing summary if any"
+        description:
+          type: string
+          description: "Existing description if any"
+        operationId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterData'
+        requestBody:
+          $ref: '#/components/schemas/RequestBodyData'
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseData'
+        security:
+          type: array
+          items:
+            type: object
+        deprecated:
+          type: boolean
+
+    ParameterData:
+      type: object
+      required:
+        - name
+        - in
+      properties:
+        name:
+          type: string
+        in:
+          type: string
+          enum: ["query", "header", "path", "cookie"]
+        description:
+          type: string
+        required:
+          type: boolean
+        schema:
+          type: object
+          additionalProperties: true
+        example:
+          description: "Example value"
+
+    RequestBodyData:
+      type: object
+      properties:
+        description:
+          type: string
+        required:
+          type: boolean
+        content:
+          type: object
+          additionalProperties:
+            type: object
+
+    ResponseData:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+        description:
+          type: string
+        content:
+          type: object
+          additionalProperties:
+            type: object
+        headers:
+          type: object
+          additionalProperties:
+            type: object
+
+    ProjectContext:
+      type: object
+      properties:
+        projectName:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        domain:
+          type: string
+          description: "Business domain (e.g., 'e-commerce', 'healthcare')"
+        relatedEndpoints:
+          type: array
+          items:
+            type: string
+          description: "Related endpoint paths for context"
+        businessRules:
+          type: array
+          items:
+            type: string
+          description: "Relevant business rules and constraints"
+
+    SummarizationOptions:
+      type: object
+      properties:
+        includeExamples:
+          type: boolean
+          default: true
+          description: "Generate usage examples"
+        generateCodeSamples:
+          type: boolean
+          default: true
+          description: "Generate code samples in multiple languages"
+        targetAudience:
+          type: string
+          enum: ["developers", "business-users", "technical-writers"]
+          default: "developers"
+        style:
+          type: string
+          enum: ["concise", "detailed", "tutorial"]
+          default: "detailed"
+        languages:
+          type: array
+          items:
+            type: string
+          default: ["javascript", "python", "curl"]
+          description: "Programming languages for code samples"
+        maxTokens:
+          type: integer
+          minimum: 100
+          maximum: 4000
+          default: 1000
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.3
+          description: "AI creativity level (lower = more deterministic)"
+
+    SummarizeResponse:
+      type: object
+      required:
+        - summaryId
+      properties:
+        summaryId:
+          type: string
+          description: "Unique identifier for this summary"
+        enhancedSummary:
+          type: string
+          description: "AI-generated enhanced summary"
+        enhancedDescription:
+          type: string
+          description: "AI-generated detailed description"
+        useCases:
+          type: array
+          items:
+            type: string
+          description: "Common use cases for this endpoint"
+        examples:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsageExample'
+        codeSamples:
+          type: array
+          items:
+            $ref: '#/components/schemas/CodeSample'
+        bestPractices:
+          type: array
+          items:
+            type: string
+          description: "Best practices for using this endpoint"
+        warnings:
+          type: array
+          items:
+            type: string
+          description: "Important warnings or considerations"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: "AI confidence score for the generated content"
+        processingTime:
+          type: number
+          description: "Processing time in seconds"
+        tokenUsage:
+          $ref: '#/components/schemas/TokenUsage'
+
+    UsageExample:
+      type: object
+      required:
+        - description
+        - request
+        - response
+      properties:
+        description:
+          type: string
+        request:
+          $ref: '#/components/schemas/ExampleRequest'
+        response:
+          $ref: '#/components/schemas/ExampleResponse'
+        scenario:
+          type: string
+          description: "Business scenario for this example"
+
+    ExampleRequest:
+      type: object
+      required:
+        - method
+        - url
+      properties:
+        method:
+          type: string
+        url:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          description: "Request body (any type)"
+
+    ExampleResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          description: "Response body (any type)"
+
+    CodeSample:
+      type: object
+      required:
+        - language
+        - code
+      properties:
+        language:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        framework:
+          type: string
+          description: "Specific framework or library used"
+
+    TokenUsage:
+      type: object
+      properties:
+        promptTokens:
+          type: integer
+        completionTokens:
+          type: integer
+        totalTokens:
+          type: integer
+        estimatedCost:
+          type: number
+          description: "Estimated cost in USD"
+
+    EnhanceRequest:
+      type: object
+      required:
+        - content
+        - type
+      properties:
+        content:
+          type: string
+          description: "Existing documentation content"
+        type:
+          type: string
+          enum: ["summary", "description", "example", "guide"]
+        context:
+          $ref: '#/components/schemas/ProjectContext'
+        options:
+          $ref: '#/components/schemas/EnhancementOptions'
+
+    EnhancementOptions:
+      type: object
+      properties:
+        focusAreas:
+          type: array
+          items:
+            type: string
+            enum: ["clarity", "completeness", "examples", "best-practices", "security"]
+        preserveOriginal:
+          type: boolean
+          default: true
+          description: "Preserve original content structure"
+        maxEnhancements:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+
+    EnhanceResponse:
+      type: object
+      required:
+        - enhancementId
+        - enhancements
+      properties:
+        enhancementId:
+          type: string
+        enhancements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Enhancement'
+        originalContent:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        tokenUsage:
+          $ref: '#/components/schemas/TokenUsage'
+
+    Enhancement:
+      type: object
+      required:
+        - type
+        - suggestion
+      properties:
+        type:
+          type: string
+          enum: ["addition", "modification", "clarification", "example", "warning"]
+        suggestion:
+          type: string
+        rationale:
+          type: string
+          description: "Why this enhancement is recommended"
+        priority:
+          type: string
+          enum: ["high", "medium", "low"]
+        position:
+          type: object
+          properties:
+            line:
+              type: integer
+            section:
+              type: string
+
+    ValidateRequest:
+      type: object
+      required:
+        - content
+        - originalEndpoint
+      properties:
+        content:
+          type: string
+          description: "AI-generated content to validate"
+        originalEndpoint:
+          $ref: '#/components/schemas/EndpointData'
+        criteria:
+          type: array
+          items:
+            type: string
+            enum: ["accuracy", "completeness", "clarity", "consistency", "usefulness"]
+
+    ValidateResponse:
+      type: object
+      required:
+        - valid
+        - score
+      properties:
+        valid:
+          type: boolean
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: "Overall quality score"
+        criteriaScores:
+          type: object
+          additionalProperties:
+            type: number
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+        suggestions:
+          type: array
+          items:
+            type: string
+
+    ValidationIssue:
+      type: object
+      required:
+        - type
+        - message
+      properties:
+        type:
+          type: string
+          enum: ["accuracy", "completeness", "clarity", "consistency"]
+        message:
+          type: string
+        severity:
+          type: string
+          enum: ["error", "warning", "suggestion"]
+        position:
+          type: string
+
+    BatchRequest:
+      type: object
+      required:
+        - endpoints
+      properties:
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointData'
+          minItems: 1
+          maxItems: 50
+        context:
+          $ref: '#/components/schemas/ProjectContext'
+        options:
+          $ref: '#/components/schemas/SummarizationOptions'
+        batchOptions:
+          type: object
+          properties:
+            priority:
+              type: string
+              enum: ["high", "normal", "low"]
+              default: "normal"
+            maxConcurrency:
+              type: integer
+              minimum: 1
+              maximum: 5
+              default: 3
+
+    BatchResponse:
+      type: object
+      required:
+        - batchId
+        - results
+      properties:
+        batchId:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchResult'
+        summary:
+          $ref: '#/components/schemas/BatchSummary'
+
+    BatchResult:
+      type: object
+      required:
+        - endpointPath
+        - status
+      properties:
+        endpointPath:
+          type: string
+        status:
+          type: string
+          enum: ["success", "failed", "skipped"]
+        summary:
+          $ref: '#/components/schemas/SummarizeResponse'
+        error:
+          $ref: '#/components/schemas/AIError'
+
+    BatchSummary:
+      type: object
+      properties:
+        totalEndpoints:
+          type: integer
+        successfulSummaries:
+          type: integer
+        failedSummaries:
+          type: integer
+        skippedEndpoints:
+          type: integer
+        totalProcessingTime:
+          type: number
+        totalTokenUsage:
+          $ref: '#/components/schemas/TokenUsage'
+
+    AIError:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+        code:
+          type: string
+          enum: ["INSUFFICIENT_DATA", "RATE_LIMIT", "TOKEN_LIMIT", "AI_SERVICE_ERROR", "VALIDATION_FAILED"]
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        retryAfter:
+          type: integer
+          description: "Seconds to wait before retrying (for rate limits)"

@@ -1,0 +1,21 @@
+# Python Parser Dependencies for API Documentation Generator
+
+# Core dependencies
+docstring-parser>=0.15      # Parse various docstring formats (Google, NumPy, Sphinx)
+pydoc-markdown>=4.8.0       # Advanced Python documentation extraction
+typing-extensions>=4.7.0    # Extended typing support for older Python versions
+pydantic>=2.4.0            # Data validation and settings management
+click>=8.1.0               # Command-line interface framework
+
+# Development dependencies
+pytest>=7.4.0             # Testing framework
+pytest-cov>=4.1.0         # Coverage reporting for pytest
+black>=23.7.0             # Code formatter
+flake8>=6.0.0             # Linting and style checking
+mypy>=1.5.0               # Static type checking
+isort>=5.12.0             # Import sorting
+pre-commit>=3.4.0         # Pre-commit hooks
+
+# Optional dependencies for advanced features
+astroid>=2.15.0           # Advanced AST analysis
+rope>=1.9.0               # Python refactoring library for code analysis

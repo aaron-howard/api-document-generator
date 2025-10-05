@@ -1,0 +1,574 @@
+openapi: 3.0.3
+info:
+  title: Parser Service API
+  description: Internal service API for parsing various source code and specification formats
+  version: 1.0.0
+
+paths:
+  /parse:
+    post:
+      summary: Parse input source
+      description: Parse source code or specification files into standardized AST format
+      operationId: parseSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+            examples:
+              openapi_parse:
+                summary: Parse OpenAPI specification
+                value:
+                  type: "openapi"
+                  source: "file"
+                  path: "./api.yaml"
+                  options:
+                    validateSchema: true
+                    resolveRefs: true
+              jsdoc_parse:
+                summary: Parse JSDoc from source code
+                value:
+                  type: "jsdoc"
+                  source: "directory"
+                  path: "./src"
+                  options:
+                    recursive: true
+                    include: ["**/*.js", "**/*.ts"]
+                    exclude: ["**/*.test.js"]
+      responses:
+        '200':
+          description: Parsing completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResponse'
+              examples:
+                success:
+                  summary: Successful parse result
+                  value:
+                    status: "success"
+                    parseId: "parse_123456789"
+                    ast:
+                      endpoints:
+                        - path: "/users"
+                          method: "GET"
+                          summary: "Get all users"
+                          parameters: []
+                          responses:
+                            - status: 200
+                              description: "List of users"
+                              schema:
+                                type: "array"
+                                items:
+                                  $ref: "#/components/schemas/User"
+                    metadata:
+                      sourceType: "openapi"
+                      version: "3.0.3"
+                      endpointCount: 15
+                      schemaCount: 8
+                    warnings: []
+        '400':
+          description: Invalid parse request or malformed source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseError'
+              examples:
+                syntax_error:
+                  summary: YAML syntax error
+                  value:
+                    status: "error"
+                    code: "SYNTAX_ERROR"
+                    message: "Invalid YAML syntax at line 25"
+                    details:
+                      line: 25
+                      column: 15
+                      expected: "mapping value"
+                      actual: "invalid character"
+        '500':
+          description: Internal parsing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseError'
+
+  /extract:
+    post:
+      summary: Extract specific information from parsed AST
+      description: Extract endpoints, schemas, or other specific elements from parsed AST
+      operationId: extractInformation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractRequest'
+      responses:
+        '200':
+          description: Extraction completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractResponse'
+        '400':
+          description: Invalid extraction request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseError'
+
+  /validate:
+    post:
+      summary: Validate parsed AST structure
+      description: Validate that parsed AST conforms to expected schema and business rules
+      operationId: validateAST
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseError'
+
+components:
+  schemas:
+    ParseRequest:
+      type: object
+      required:
+        - type
+        - source
+        - path
+      properties:
+        type:
+          type: string
+          enum: ["openapi", "jsdoc", "python-docstring", "go-doc", "graphql"]
+          description: "Type of source to parse"
+        source:
+          type: string
+          enum: ["file", "directory", "url", "content"]
+          description: "Source location type"
+        path:
+          type: string
+          description: "Path, URL, or direct content to parse"
+        options:
+          $ref: '#/components/schemas/ParseOptions'
+
+    ParseOptions:
+      type: object
+      properties:
+        validateSchema:
+          type: boolean
+          default: true
+          description: "Validate source against schema"
+        resolveRefs:
+          type: boolean
+          default: true
+          description: "Resolve external references"
+        recursive:
+          type: boolean
+          default: false
+          description: "Parse directories recursively"
+        include:
+          type: array
+          items:
+            type: string
+          description: "File patterns to include"
+        exclude:
+          type: array
+          items:
+            type: string
+          description: "File patterns to exclude"
+        parserSpecific:
+          type: object
+          additionalProperties: true
+          description: "Parser-specific configuration options"
+
+    ParseResponse:
+      type: object
+      required:
+        - status
+        - parseId
+      properties:
+        status:
+          type: string
+          enum: ["success", "partial", "failed"]
+        parseId:
+          type: string
+          description: "Unique identifier for this parse operation"
+        ast:
+          $ref: '#/components/schemas/StandardizedAST'
+        metadata:
+          $ref: '#/components/schemas/ParseMetadata'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParseWarning'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParseError'
+
+    StandardizedAST:
+      type: object
+      description: "Standardized Abstract Syntax Tree representation"
+      properties:
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParsedEndpoint'
+        schemas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParsedSchema'
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParsedComponent'
+        metadata:
+          type: object
+          additionalProperties: true
+
+    ParsedEndpoint:
+      type: object
+      required:
+        - path
+        - method
+      properties:
+        path:
+          type: string
+          description: "API endpoint path"
+        method:
+          type: string
+          enum: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+        summary:
+          type: string
+          description: "Brief endpoint summary"
+        description:
+          type: string
+          description: "Detailed endpoint description"
+        operationId:
+          type: string
+          description: "Unique operation identifier"
+        tags:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParsedParameter'
+        requestBody:
+          $ref: '#/components/schemas/ParsedRequestBody'
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParsedResponse'
+        security:
+          type: array
+          items:
+            type: object
+        deprecated:
+          type: boolean
+          default: false
+        sourceLocation:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParsedParameter:
+      type: object
+      required:
+        - name
+        - in
+      properties:
+        name:
+          type: string
+        in:
+          type: string
+          enum: ["query", "header", "path", "cookie"]
+        description:
+          type: string
+        required:
+          type: boolean
+          default: false
+        schema:
+          $ref: '#/components/schemas/ParsedSchema'
+        example:
+          description: "Example value"
+        sourceLocation:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParsedRequestBody:
+      type: object
+      properties:
+        description:
+          type: string
+        required:
+          type: boolean
+          default: false
+        content:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ParsedMediaType'
+        sourceLocation:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParsedResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: "HTTP status code or pattern"
+        description:
+          type: string
+        content:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ParsedMediaType'
+        headers:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ParsedHeader'
+        sourceLocation:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParsedMediaType:
+      type: object
+      properties:
+        schema:
+          $ref: '#/components/schemas/ParsedSchema'
+        examples:
+          type: object
+          additionalProperties: true
+        encoding:
+          type: object
+          additionalProperties: true
+
+    ParsedHeader:
+      type: object
+      properties:
+        description:
+          type: string
+        required:
+          type: boolean
+        schema:
+          $ref: '#/components/schemas/ParsedSchema'
+
+    ParsedSchema:
+      type: object
+      properties:
+        type:
+          type: string
+        format:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ParsedSchema'
+        items:
+          $ref: '#/components/schemas/ParsedSchema'
+        required:
+          type: array
+          items:
+            type: string
+        enum:
+          type: array
+        example:
+          description: "Example value"
+        default:
+          description: "Default value"
+        minimum:
+          type: number
+        maximum:
+          type: number
+        minLength:
+          type: integer
+        maxLength:
+          type: integer
+        pattern:
+          type: string
+        ref:
+          type: string
+          description: "Reference to another schema"
+        sourceLocation:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParsedComponent:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: ["schema", "parameter", "response", "requestBody", "header", "securityScheme"]
+        definition:
+          type: object
+          additionalProperties: true
+        sourceLocation:
+          $ref: '#/components/schemas/SourceLocation'
+
+    SourceLocation:
+      type: object
+      properties:
+        file:
+          type: string
+        line:
+          type: integer
+        column:
+          type: integer
+        offset:
+          type: integer
+
+    ParseMetadata:
+      type: object
+      properties:
+        sourceType:
+          type: string
+        version:
+          type: string
+        endpointCount:
+          type: integer
+        schemaCount:
+          type: integer
+        parseTime:
+          type: number
+          description: "Parse time in seconds"
+        fileSize:
+          type: integer
+          description: "Source file size in bytes"
+
+    ExtractRequest:
+      type: object
+      required:
+        - parseId
+        - extractType
+      properties:
+        parseId:
+          type: string
+          description: "Parse operation ID to extract from"
+        extractType:
+          type: string
+          enum: ["endpoints", "schemas", "components", "metadata"]
+        filters:
+          type: object
+          properties:
+            tags:
+              type: array
+              items:
+                type: string
+            methods:
+              type: array
+              items:
+                type: string
+            paths:
+              type: array
+              items:
+                type: string
+
+    ExtractResponse:
+      type: object
+      required:
+        - extractId
+        - data
+      properties:
+        extractId:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        count:
+          type: integer
+
+    ValidationRequest:
+      type: object
+      required:
+        - parseId
+      properties:
+        parseId:
+          type: string
+        rules:
+          type: array
+          items:
+            type: string
+          description: "Validation rules to apply"
+
+    ValidationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationViolation'
+
+    ValidationViolation:
+      type: object
+      required:
+        - rule
+        - message
+      properties:
+        rule:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum: ["error", "warning", "info"]
+        location:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParseWarning:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        location:
+          $ref: '#/components/schemas/SourceLocation'
+
+    ParseError:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        location:
+          $ref: '#/components/schemas/SourceLocation'

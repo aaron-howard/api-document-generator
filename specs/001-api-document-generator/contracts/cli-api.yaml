@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: API Document Generator CLI
+  description: Command-line interface for generating API documentation from various sources
+  version: 1.0.0
+
+paths:
+  /generate:
+    post:
+      summary: Generate API documentation
+      description: Process input sources and generate documentation in specified formats
+      operationId: generateDocumentation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerationRequest'
+            examples:
+              basic_generation:
+                summary: Basic documentation generation
+                value:
+                  project:
+                    name: "My API"
+                    version: "1.0.0"
+                    description: "Sample API for testing"
+                  inputs:
+                    - type: "openapi"
+                      path: "./openapi.yaml"
+                      enabled: true
+                  outputs:
+                    - format: "markdown"
+                      path: "./docs"
+                      theme: "default"
+                  options:
+                    aiSummarization: true
+                    generateChangelog: false
+      responses:
+        '200':
+          description: Documentation generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResponse'
+              examples:
+                success:
+                  summary: Successful generation
+                  value:
+                    status: "success"
+                    sessionId: "gen_123456789"
+                    outputPaths:
+                      - "./docs/api.md"
+                      - "./docs/index.html"
+                    metrics:
+                      processedEndpoints: 45
+                      generationTime: 2.3
+                      aiSummariesGenerated: 45
+                    warnings: []
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_input:
+                  summary: Invalid input source
+                  value:
+                    status: "error"
+                    code: "INVALID_INPUT"
+                    message: "Input source not found: ./nonexistent.yaml"
+                    details:
+                      path: "./nonexistent.yaml"
+                      suggestions:
+                        - "Check if the file path is correct"
+                        - "Ensure the file exists and is readable"
+        '500':
+          description: Internal generation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /validate:
+    post:
+      summary: Validate input sources
+      description: Validate input specifications without generating documentation
+      operationId: validateSources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Invalid validation request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /diff:
+    post:
+      summary: Generate changelog between API versions
+      description: Compare two API versions and generate semantic differences
+      operationId: generateChangelog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiffRequest'
+      responses:
+        '200':
+          description: Changelog generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiffResponse'
+        '400':
+          description: Invalid diff request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    GenerationRequest:
+      type: object
+      required:
+        - project
+        - inputs
+        - outputs
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectConfig'
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputSource'
+          minItems: 1
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutputConfig'
+          minItems: 1
+        options:
+          $ref: '#/components/schemas/GenerationOptions'
+
+    ProjectConfig:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        version:
+          type: string
+          pattern: '^\\d+\\.\\d+\\.\\d+.*$'
+        description:
+          type: string
+          maxLength: 500
+        baseUrl:
+          type: string
+          format: uri
+
+    InputSource:
+      type: object
+      required:
+        - type
+        - path
+      properties:
+        type:
+          type: string
+          enum: ["openapi", "jsdoc", "python-docstring", "go-doc", "graphql"]
+        path:
+          type: string
+          minLength: 1
+        include:
+          type: array
+          items:
+            type: string
+        exclude:
+          type: array
+          items:
+            type: string
+        enabled:
+          type: boolean
+          default: true
+        parserConfig:
+          type: object
+          additionalProperties: true
+
+    OutputConfig:
+      type: object
+      required:
+        - format
+        - path
+      properties:
+        format:
+          type: string
+          enum: ["markdown", "html", "pdf", "json"]
+        path:
+          type: string
+          minLength: 1
+        theme:
+          type: string
+          default: "default"
+        template:
+          type: string
+        options:
+          type: object
+          additionalProperties: true
+
+    GenerationOptions:
+      type: object
+      properties:
+        aiSummarization:
+          type: boolean
+          default: true
+        generateChangelog:
+          type: boolean
+          default: false
+        validateOutput:
+          type: boolean
+          default: true
+        concurrency:
+          type: integer
+          minimum: 1
+          maximum: 3
+          default: 1
+
+    GenerationResponse:
+      type: object
+      required:
+        - status
+        - sessionId
+      properties:
+        status:
+          type: string
+          enum: ["success", "partial", "failed"]
+        sessionId:
+          type: string
+        outputPaths:
+          type: array
+          items:
+            type: string
+        metrics:
+          $ref: '#/components/schemas/GenerationMetrics'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+
+    GenerationMetrics:
+      type: object
+      properties:
+        processedEndpoints:
+          type: integer
+          minimum: 0
+        generationTime:
+          type: number
+          minimum: 0
+        aiSummariesGenerated:
+          type: integer
+          minimum: 0
+        cacheHitRate:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    ValidationRequest:
+      type: object
+      required:
+        - inputs
+      properties:
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputSource'
+          minItems: 1
+
+    ValidationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+
+    ValidationError:
+      type: object
+      required:
+        - code
+        - message
+        - path
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        line:
+          type: integer
+        column:
+          type: integer
+
+    DiffRequest:
+      type: object
+      required:
+        - oldVersion
+        - newVersion
+      properties:
+        oldVersion:
+          $ref: '#/components/schemas/InputSource'
+        newVersion:
+          $ref: '#/components/schemas/InputSource'
+        options:
+          type: object
+          properties:
+            includeBreaking:
+              type: boolean
+              default: true
+            format:
+              type: string
+              enum: ["markdown", "json"]
+              default: "markdown"
+
+    DiffResponse:
+      type: object
+      required:
+        - changes
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChangeEntry'
+        summary:
+          $ref: '#/components/schemas/ChangeSummary'
+
+    ChangeEntry:
+      type: object
+      required:
+        - type
+        - category
+        - path
+        - description
+      properties:
+        type:
+          type: string
+          enum: ["added", "modified", "removed", "deprecated"]
+        category:
+          type: string
+          enum: ["endpoint", "schema", "parameter", "response"]
+        path:
+          type: string
+        description:
+          type: string
+        breaking:
+          type: boolean
+          default: false
+        severity:
+          type: string
+          enum: ["major", "minor", "patch"]
+
+    ChangeSummary:
+      type: object
+      properties:
+        totalChanges:
+          type: integer
+        breakingChanges:
+          type: integer
+        newEndpoints:
+          type: integer
+        modifiedEndpoints:
+          type: integer
+        removedEndpoints:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    Warning:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        stack:
+          type: string
