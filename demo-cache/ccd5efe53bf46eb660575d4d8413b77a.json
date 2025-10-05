@@ -1,0 +1,11 @@
+{
+  "key": "perf-test-7",
+  "value": {
+    "iteration": 7,
+    "data": "test-data-7"
+  },
+  "createdAt": "2025-10-05T19:41:37.997Z",
+  "expiresAt": "2025-10-05T20:41:37.997Z",
+  "status": "fresh",
+  "contentHash": "827c9bf17bc2cb27f0cbd581350bac4cd3bfbd8c4496e413408bb1824a15450b"
+}

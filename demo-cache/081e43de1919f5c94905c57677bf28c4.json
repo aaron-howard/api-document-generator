@@ -1,0 +1,15 @@
+{
+  "key": "demo-parse-key",
+  "value": {
+    "success": true,
+    "data": {
+      "endpoints": 7,
+      "schemas": 4
+    },
+    "timestamp": "2025-10-05T19:41:37.978Z"
+  },
+  "createdAt": "2025-10-05T19:41:37.979Z",
+  "expiresAt": "2025-10-05T20:41:37.979Z",
+  "status": "fresh",
+  "contentHash": "2d62a0a1f2c201ea5569feaff8c9aa7c46b9ac77c1b528146bdbb425055600a8"
+}

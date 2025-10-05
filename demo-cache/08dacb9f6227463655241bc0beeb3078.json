@@ -1,0 +1,19 @@
+{
+  "key": "parse:{\"input\":{\"path\":\"./demo-spec.yaml\",\"type\":\"openap",
+  "value": {
+    "success": true,
+    "data": {
+      "endpoints": 7,
+      "schemas": 5,
+      "parsedAt": "2025-10-05T19:41:37.986Z"
+    },
+    "metadata": {
+      "parser": "mock",
+      "version": "1.0.0"
+    }
+  },
+  "createdAt": "2025-10-05T19:41:37.986Z",
+  "expiresAt": "2025-10-05T20:41:37.986Z",
+  "status": "fresh",
+  "contentHash": "9c7ce6a0214cbb273110369efa060aa416b24380f7ce59c72d4c7dd1fe47cf0d"
+}

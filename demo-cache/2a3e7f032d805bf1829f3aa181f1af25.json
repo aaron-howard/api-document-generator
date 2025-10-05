@@ -1,0 +1,17 @@
+{
+  "key": "ai:enhance:{\"content\":\"Basic endpoint description\",\"context\":",
+  "value": {
+    "enhanced": true,
+    "content": "Enhanced documentation with AI improvements",
+    "suggestions": [
+      "Add examples",
+      "Improve descriptions",
+      "Include error codes"
+    ],
+    "confidence": 0.930920581679003
+  },
+  "createdAt": "2025-10-05T19:41:37.988Z",
+  "expiresAt": "2025-10-05T21:41:37.988Z",
+  "status": "fresh",
+  "contentHash": "07cc51fe130ec1f3063cd51b10fa26793b502794786e036a8145e36cdd1d690f"
+}

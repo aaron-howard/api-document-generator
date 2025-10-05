@@ -1,0 +1,15 @@
+{
+  "key": "session:demo-session-key",
+  "value": {
+    "sessionId": "demo-session-456",
+    "config": {
+      "outputFormat": "pdf",
+      "theme": "corporate"
+    },
+    "state": "processing"
+  },
+  "createdAt": "2025-10-05T19:41:37.984Z",
+  "expiresAt": "2025-10-05T20:11:37.984Z",
+  "status": "fresh",
+  "contentHash": "b2bf3f39adfabe0feff44bcb215f62fb340539edf94cdcd6ff1cac66fd2b0b58"
+}

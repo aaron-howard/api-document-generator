@@ -1,0 +1,13 @@
+{
+  "key": "gen:generate:{\"format\":\"markdown\",\"data\":{\"title\":\"Demo API\"}}",
+  "value": {
+    "format": "markdown",
+    "content": "# Generated API Documentation\n\nThis is mock generated content.",
+    "size": 2325,
+    "generatedAt": "2025-10-05T19:41:37.989Z"
+  },
+  "createdAt": "2025-10-05T19:41:37.989Z",
+  "expiresAt": "2025-10-05T20:41:37.989Z",
+  "status": "fresh",
+  "contentHash": "deb395f0bcb4f749dd1dc6dc900623e0ced599c10ba2f0ed7c42a402d3cd9b03"
+}

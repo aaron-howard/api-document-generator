@@ -1,0 +1,15 @@
+{
+  "key": "ai:demo-ai-key",
+  "value": {
+    "summary": "This is a comprehensive API with RESTful endpoints",
+    "confidence": 0.92,
+    "suggestions": [
+      "Add authentication documentation",
+      "Include rate limiting info"
+    ]
+  },
+  "createdAt": "2025-10-05T19:41:37.981Z",
+  "expiresAt": "2025-10-05T21:41:37.981Z",
+  "status": "fresh",
+  "contentHash": "e8980b47f6c854b801e44373b78e6d8a838ca5fb225f96c5f9fc1c4c59c5477e"
+}

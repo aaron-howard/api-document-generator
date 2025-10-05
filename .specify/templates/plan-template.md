@@ -47,7 +47,16 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Accuracy & Truth**: Does this feature ensure all generated documentation reflects actual API behavior?
+**Privacy & Security**: Are there any sensitive data exposure risks in the documentation generation?
+**Developer Experience**: Does the implementation provide intuitive, fast setup with minimal configuration?
+**Consistency & Clarity**: Will the feature maintain consistent formatting and terminology across outputs?
+**Extensibility**: Does the design support custom templates, themes, and plugin architecture?
+**Performance & Scalability**: Can the implementation handle large codebases without performance degradation?
+**Interoperability**: Does the feature integrate with CI/CD pipelines and support multiple output formats?
+**Testing & Auditability**: Are validation, diffing tools, and logging included in the design?
+**AI-Assisted Intelligence**: If applicable, does AI content include human oversight for accuracy?
+**Change Detection**: If applicable, does the feature support semantic diff generation and versioning?
 
 ## Project Structure
 
@@ -216,4 +225,4 @@ directories captured above]
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+*Based on Constitution v1.0.0 - See `/memory/constitution.md`*

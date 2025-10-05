@@ -1,0 +1,12 @@
+{
+  "key": "gen:demo-gen-key",
+  "value": {
+    "format": "html",
+    "content": "<h1>API Documentation</h1><p>Generated HTML documentation</p>",
+    "size": 2048
+  },
+  "createdAt": "2025-10-05T19:41:37.982Z",
+  "expiresAt": "2025-10-05T20:41:37.982Z",
+  "status": "fresh",
+  "contentHash": "773e3895ab3841306d950ae1c0f808e27246a1d5a1b399957b326b3d7484dc85"
+}

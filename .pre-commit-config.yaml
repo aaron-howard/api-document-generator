@@ -1,0 +1,92 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-symlinks
+      - id: check-toml
+      - id: mixed-line-ending
+
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: ^python/
+        args: [--line-length=88]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        files: ^python/
+        args: [--profile=black]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        files: ^python/
+        args: [--max-line-length=88, --extend-ignore=E203,W503]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.5.1
+    hooks:
+      - id: mypy
+        files: ^python/
+        additional_dependencies: [types-all]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.50.0
+    hooks:
+      - id: eslint
+        files: ^src/.*\.(ts|js)$
+        additional_dependencies:
+          - eslint@8.50.0
+          - "@typescript-eslint/eslint-plugin@6.7.4"
+          - "@typescript-eslint/parser@6.7.4"
+          - eslint-config-prettier@9.0.0
+          - eslint-plugin-prettier@5.0.0
+          - prettier@3.0.3
+          - typescript@5.2.2
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.3
+    hooks:
+      - id: prettier
+        files: ^src/.*\.(ts|js|json|md|yaml|yml)$
+
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+        files: ^go/
+      - id: go-vet-mod
+        files: ^go/
+      - id: go-mod-tidy
+        files: ^go/
+
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript Check
+        entry: npx tsc --noEmit
+        language: system
+        files: ^src/.*\.ts$
+        pass_filenames: false
+
+      - id: jest-test
+        name: Jest Tests
+        entry: npm test
+        language: system
+        files: ^(src|tests)/.*\.(ts|js)$
+        pass_filenames: false
+
+default_stages: [commit]

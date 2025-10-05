@@ -1,0 +1,10 @@
+{
+  "key": "ai:demo-ai-invalidate",
+  "value": {
+    "data": "ai-test"
+  },
+  "createdAt": "2025-10-05T19:41:37.992Z",
+  "expiresAt": "2025-10-05T21:41:37.992Z",
+  "status": "fresh",
+  "contentHash": "1285c231d55c9f41248cb8148bb7676eed27878ab321ba082a4102894c21472e"
+}
