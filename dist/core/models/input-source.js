@@ -46,7 +46,7 @@ class InputSourceFactory {
             include: config.include || this.getDefaultIncludePatterns(config.type),
             exclude: config.exclude || this.getDefaultExcludePatterns(),
             parserConfig: config.parserConfig || this.getDefaultParserConfig(config.type),
-            priority: config.priority || 1,
+            priority: config.priority ?? 1,
             enabled: config.enabled !== false,
             state: config.state || InputSourceState.INACTIVE,
             metadata: config.metadata || this.createDefaultMetadata(),
