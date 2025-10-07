@@ -1,5 +1,8 @@
 # Deployment Instructions
 
+> ⚠️ **Windows-Only Deployment**  
+> All deployment scenarios described in this document are intended **exclusively for Windows environments**. Docker, Kubernetes, or Linux-based deployment targets referenced previously are deprecated for this repository. Any non-Windows usage is out of scope and unsupported.
+
 This guide covers various deployment scenarios for the API Documentation Generator, from simple standalone installations to enterprise-scale containerized deployments.
 
 ## Table of Contents
@@ -28,14 +31,14 @@ The API Documentation Generator can be deployed in several ways:
 
 ### Server Requirements
 
-**Minimum Requirements:**
+**Minimum Requirements (Windows Only):**
 - CPU: 2 cores
 - RAM: 4GB
 - Storage: 10GB available space
-- OS: Linux (Ubuntu 20.04+), macOS, or Windows 10+
-- Node.js: 18.0.0 or higher
+- OS: Windows 10 or Windows Server 2019+
+- Node.js: 18.0.0 or higher (Windows build)
 
-**Recommended for Production:**
+**Recommended for Production (Windows):**
 - CPU: 4+ cores
 - RAM: 8GB+
 - Storage: 50GB+ SSD

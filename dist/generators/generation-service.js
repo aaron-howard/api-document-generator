@@ -12,12 +12,12 @@ exports.GenerationServiceError = exports.GenerationService = void 0;
  * Main Generation Service class implementing the complete generation service contract
  */
 class GenerationService {
-    constructor(options) {
+    // Asset manager deferred (was private _assetManager)
+    constructor(_options) {
         this.engines = new Map();
         this.generators = new Map();
         this.templates = new Map();
         this.themes = new Map();
-        this._assetManager = new AssetManager(options?.assetConfig);
         this.initializeDefaultTemplates();
         this.initializeDefaultThemes();
     }
@@ -272,8 +272,8 @@ class GenerationService {
                 status: 'error',
                 code: error.code,
                 message: error.message,
-                details: error.details,
-                suggestions: error.suggestions
+                details: error.details || {},
+                suggestions: error.suggestions || []
             };
         }
         return {
@@ -337,26 +337,7 @@ exports.GenerationService = GenerationService;
 /**
  * Asset Manager for handling template assets
  */
-class AssetManager {
-    constructor(_config) {
-        this._config = _config;
-    }
-    async loadAsset(path) {
-        // Implementation would load assets from filesystem or CDN
-        return null;
-    }
-    async validateAssets(assets) {
-        // Implementation would validate asset integrity and dependencies
-        return {
-            isValid: true,
-            errors: [],
-            warnings: [],
-            missingAssets: [],
-            unusedAssets: [],
-            brokenDependencies: []
-        };
-    }
-}
+// AssetManager removed (deferred implementation)
 /**
  * Generation Service specific error class
  */

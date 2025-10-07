@@ -106,7 +106,7 @@ class CacheManager {
                 success: false,
                 fromCache: false,
                 responseTime: Date.now() - startTime,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 warnings: []
             };
         }
@@ -143,7 +143,7 @@ class CacheManager {
                 success: false,
                 fromCache: false,
                 responseTime: Date.now() - startTime,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 warnings: []
             };
         }
@@ -180,7 +180,7 @@ class CacheManager {
                 success: false,
                 fromCache: false,
                 responseTime: Date.now() - startTime,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 warnings: []
             };
         }
@@ -217,9 +217,20 @@ class CacheManager {
                 success: false,
                 fromCache: false,
                 responseTime: Date.now() - startTime,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 warnings: []
             };
+        }
+    }
+    /**
+     * Clear entire cache (simple invalidation helper)
+     */
+    async clearAll() {
+        try {
+            await this.invalidateByPattern('*', 'clearAll');
+        }
+        catch (error) {
+            throw new Error(`Failed to clear cache: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
     /**

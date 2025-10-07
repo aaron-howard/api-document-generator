@@ -217,6 +217,8 @@ export interface SecuritySettings {
     readonly encryptInTransit: boolean;
     readonly algorithm: string;
     readonly keyRotation: boolean;
+    /** Added for runtime feature gating */
+    readonly enabled?: boolean;
   };
   readonly audit: {
     readonly enableAuditLog: boolean;
@@ -757,7 +759,8 @@ export class ConfigurationFactory {
         encryptAtRest: false,
         encryptInTransit: true,
         algorithm: 'AES-256',
-        keyRotation: false
+        keyRotation: false,
+        enabled: true
       },
       audit: {
         enableAuditLog: false,

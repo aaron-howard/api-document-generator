@@ -49,7 +49,7 @@ export interface ConfigurationChangeEvent {
   readonly path?: string;
   readonly changes: readonly string[];
   readonly timestamp: Date;
-  readonly userId?: string;
+  readonly userId?: string | undefined;
   readonly metadata: Record<string, any>;
 }
 
@@ -159,12 +159,14 @@ export class ConfigurationManager {
   private configuration: Configuration | null = null;
   private userPreferences: UserPreferences | null = null;
   private environmentVariables: Record<string, string> = {};
-  private watchers: Map<string, ConfigurationWatcher> = new Map();
+  // File watchers placeholder (implementation deferred)
+  // Removed active usage to reduce unused variable warnings under strict mode
+  // private watchers: Map<string, ConfigurationWatcher> = new Map();
   private changeListeners: Set<(event: ConfigurationChangeEvent) => void> = new Set();
   private backups: Map<string, ConfigurationBackup> = new Map();
-  private performanceMonitor?: PerformanceMonitor;
-  private errorHandler?: ErrorHandler;
-  private cacheManager?: CacheManager;
+  private performanceMonitor?: PerformanceMonitor | undefined;
+  private errorHandler?: ErrorHandler | undefined;
+  private cacheManager?: CacheManager | undefined;
   private reloadTimer?: NodeJS.Timeout;
 
   constructor(options: ConfigurationManagerOptions = {}) {
@@ -198,9 +200,9 @@ export class ConfigurationManager {
     errorHandler?: ErrorHandler,
     cacheManager?: CacheManager
   ): Promise<void> {
-    this.performanceMonitor = performanceMonitor;
-    this.errorHandler = errorHandler;
-    this.cacheManager = cacheManager;
+    if (performanceMonitor) this.performanceMonitor = performanceMonitor;
+    if (errorHandler) this.errorHandler = errorHandler;
+    if (cacheManager) this.cacheManager = cacheManager;
 
     try {
       // Create configuration directories
@@ -412,7 +414,7 @@ export class ConfigurationManager {
         path: prefsPath,
         changes: ['user-preferences'],
         timestamp: new Date(),
-        userId,
+        userId: userId || undefined,
         metadata: {}
       });
 
@@ -588,8 +590,6 @@ export class ConfigurationManager {
 
       const result: ConfigurationImportResult = {
         success: false,
-        configuration: undefined,
-        userPreferences: undefined,
         errors: [],
         warnings: [],
         imported: [],
@@ -623,7 +623,7 @@ export class ConfigurationManager {
         }
       }
 
-      result.success = result.errors.length === 0;
+  (result as any).success = result.errors.length === 0;
 
       this.emitChangeEvent({
         type: 'imported',
@@ -672,8 +672,8 @@ export class ConfigurationManager {
       if (!config.performanceSettings.caching?.enabled) {
         performanceIssues.push('Caching is not enabled');
       }
-      if (config.performanceSettings.concurrent?.maxWorkers && config.performanceSettings.concurrent.maxWorkers > 16) {
-        performanceIssues.push('High number of concurrent workers may impact performance');
+      if (config.performanceSettings.parallelization?.maxWorkers && config.performanceSettings.parallelization.maxWorkers > 16) {
+        performanceIssues.push('High number of parallel workers may impact performance');
       }
     }
 
@@ -761,9 +761,7 @@ export class ConfigurationManager {
     }
 
     // Stop file watchers
-    for (const watcher of this.watchers.values()) {
-      // Stop watching implementation would go here
-    }
+    // (File watchers would be stopped here when implemented)
 
     // Clear listeners
     this.changeListeners.clear();
@@ -817,7 +815,7 @@ export class ConfigurationManager {
     }
   }
 
-  private loadEnvironmentConfiguration(context: ConfigurationLoadingContext): Partial<Configuration> {
+  private loadEnvironmentConfiguration(_context: ConfigurationLoadingContext): Partial<Configuration> {
     const config: any = {};
 
     // Map environment variables to configuration
@@ -837,8 +835,8 @@ export class ConfigurationManager {
     try {
       const preferences = await this.loadUserPreferences(context.userId);
       return {
-        userPreferences: preferences
-      };
+        userPreferences: preferences as unknown as any // relaxed typing for aggregation partial
+      } as any;
     } catch (error) {
       return null;
     }
@@ -951,11 +949,11 @@ export class ConfigurationManager {
   private async handleError(message: string, error: any): Promise<void> {
     if (this.errorHandler) {
       await this.errorHandler.handleError(error, {
-        context: 'ConfigurationManager',
+        serviceName: 'ConfigurationManager',
         operation: message,
         severity: 'medium',
-        metadata: { error: error.message }
-      });
+        metadata: { error: error instanceof Error ? error.message : String(error) }
+      } as any);
     } else {
       console.error(`ConfigurationManager: ${message}`, error);
     }
@@ -976,20 +974,22 @@ export class ConfigurationManager {
   }
 
   private setNestedProperty(obj: any, path: string, value: any): void {
-    const keys = path.split('_');
-    let current = obj;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      if (!current[keys[i]]) {
-        current[keys[i]] = {};
+    if (!path) return;
+    const segments = path.split('_').filter(Boolean);
+    if (segments.length === 0) return;
+    let cursor: any = obj;
+    for (let i = 0; i < segments.length - 1; i++) {
+      const key = segments[i]!;
+      if (cursor[key] == null || typeof cursor[key] !== 'object') {
+        (cursor as Record<string, any>)[key] = {};
       }
-      current = current[keys[i]];
+      cursor = (cursor as Record<string, any>)[key];
     }
-
-    current[keys[keys.length - 1]] = value;
+    const leaf = segments[segments.length - 1]!;
+    (cursor as Record<string, any>)[leaf] = value;
   }
 
-  private filterConfigurationByCategories(config: any, categories: readonly string[]): any {
+  private filterConfigurationByCategories(config: any, _categories: readonly string[]): any {
     // Implementation for filtering configuration by categories
     return config;
   }

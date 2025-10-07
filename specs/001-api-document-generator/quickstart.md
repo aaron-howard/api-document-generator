@@ -1,5 +1,8 @@
 # API Documentation Generator - Quick Start Guide
 
+> ⚠️ **Windows-Only Quick Start**  
+> This quick start applies solely to Windows systems. Installation or execution on Linux or macOS is not supported in this project scope.
+
 This guide provides step-by-step instructions for getting started with the API Documentation Generator, from installation to generating your first documentation.
 
 ## Table of Contents

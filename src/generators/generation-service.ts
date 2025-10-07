@@ -8,14 +8,9 @@
 
 import { 
   Template, 
-  TemplateType, 
-  TemplateEngine, 
-  TemplateAsset, 
   ThemeConfiguration, 
-  RenderingContext,
   TemplateCustomization,
-  TemplateValidationResult,
-  TemplateMetrics
+  TemplateValidationResult
 } from '../core/models/template';
 
 /**
@@ -292,7 +287,7 @@ export interface GenerationError {
   code: string;
   message: string;
   details?: Record<string, any>;
-  suggestions?: string[];
+  suggestions?: string[] | undefined;
 }
 
 /**
@@ -379,10 +374,9 @@ export class GenerationService {
   private generators: Map<string, IFormatGenerator> = new Map();
   private templates: Map<string, Template> = new Map();
   private themes: Map<string, ThemeConfiguration> = new Map();
-  private _assetManager: AssetManager;
+  // Asset manager deferred (was private _assetManager)
 
-  constructor(options?: GenerationServiceOptions) {
-    this._assetManager = new AssetManager(options?.assetConfig);
+  constructor(_options?: GenerationServiceOptions) {
     this.initializeDefaultTemplates();
     this.initializeDefaultThemes();
   }
@@ -683,8 +677,8 @@ export class GenerationService {
         status: 'error',
         code: error.code,
         message: error.message,
-        details: error.details,
-        suggestions: error.suggestions
+        details: error.details || {},
+        suggestions: error.suggestions || []
       };
     }
 
@@ -766,26 +760,7 @@ export interface GenerationServiceOptions {
 /**
  * Asset Manager for handling template assets
  */
-class AssetManager {
-  constructor(private _config?: { basePath?: string; maxSize?: number; allowedTypes?: string[] }) {}
-
-  async loadAsset(path: string): Promise<TemplateAsset | null> {
-    // Implementation would load assets from filesystem or CDN
-    return null;
-  }
-
-  async validateAssets(assets: TemplateAsset[]): Promise<TemplateValidationResult> {
-    // Implementation would validate asset integrity and dependencies
-    return {
-      isValid: true,
-      errors: [],
-      warnings: [],
-      missingAssets: [],
-      unusedAssets: [],
-      brokenDependencies: []
-    };
-  }
-}
+// AssetManager removed (deferred implementation)
 
 /**
  * Generation Service specific error class

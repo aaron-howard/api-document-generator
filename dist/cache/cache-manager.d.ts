@@ -151,6 +151,10 @@ export declare class CacheManager {
      */
     getSessionData<T = any>(key: string): Promise<CacheResult<T>>;
     /**
+     * Clear entire cache (simple invalidation helper)
+     */
+    clearAll(): Promise<void>;
+    /**
      * Cache CLI session data
      */
     setSessionData<T = any>(key: string, data: T, ttl?: number): Promise<void>;

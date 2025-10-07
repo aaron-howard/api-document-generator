@@ -1,5 +1,8 @@
 # Architecture Documentation
 
+> ⚠️ **Runtime Platform Constraint**  
+> Architectural descriptions reflect a Windows-only support model. Any references to cross-platform abstractions are historical and not commitments to non-Windows compatibility.
+
 ## Table of Contents
 
 - [System Overview](#system-overview)

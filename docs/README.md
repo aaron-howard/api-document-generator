@@ -1,5 +1,10 @@
 # API Documentation Generator
 
+> ⚠️ **Platform Notice (Windows-Only)**  
+> This project is officially supported **only on Microsoft Windows environments**. Commands, paths, shell examples, and deployment guidance assume a Windows OS (PowerShell). Unix/Linux/macOS environments are **not supported** and may encounter incompatibilities.
+> 
+> If you attempt to run on a non-Windows system, behavior is undefined and issues will be closed unless they reproduce on Windows.
+
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/your-org/api-documentation-generator)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/your-org/api-documentation-generator/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -39,21 +44,50 @@ A powerful, multi-runtime CLI tool for generating comprehensive API documentatio
 - Optional: Python 3.9+ for Python source parsing
 - Optional: Go 1.19+ for Go source parsing
 
-### Install from npm
+### Install (npm Package Not Yet Published)
 
-```bash
-npm install -g api-documentation-generator
+> ⚠️ This package name (`api-documentation-generator`) is **not currently published to the public npm registry**. The command below will fail until an initial release is published. Use the "Install from source" instructions instead.
+
+Planned future command (not active yet):
+```powershell
+npm install -g api-documentation-generator   # Not available yet
 ```
 
-### Install from source
+### Install from source (Windows)
 
-```bash
+```powershell
+# Clone the repository
 git clone https://github.com/your-org/api-documentation-generator.git
 cd api-documentation-generator
+
+# Install dependencies
 npm install
+
+# Build TypeScript sources
 npm run build
-npm link
+
+# (Optional) Link globally for convenience
+npm link   # This will provide the `api-doc-gen` command on your PATH
+
+# OR run directly without linking
+node dist/cli/index.js --help
 ```
+
+### Run without global install
+```powershell
+node dist/cli/index.js generate --config api-doc-gen.config.js
+```
+
+### (Optional) Internal publish workflow (for maintainers)
+If/when you decide to publish:
+```powershell
+# Bump the version in package.json first
+npm login
+npm publish --access public
+```
+After publishing you can revert to the standard global install step.
+
+<!-- Original 'Install from source' section replaced by enhanced Windows-specific instructions above -->
 
 ### Verify installation
 

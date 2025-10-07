@@ -1,5 +1,8 @@
 # Contributing to API Documentation Generator
 
+> ⚠️ **Platform Scope**  
+> Contribution environment is restricted to **Windows OS**. Tooling, scripts, and CI expectations assume PowerShell and Windows path semantics. Please do not submit PRs for Unix/macOS portability unless project scope changes.
+
 Thank you for your interest in contributing to the API Documentation Generator! This guide will help you get started with contributing to the project.
 
 ## Table of Contents

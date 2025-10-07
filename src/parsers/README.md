@@ -1,5 +1,8 @@
 # T024 Parser Service Implementation ✅
 
+> ⚠️ **Windows Support Only**  
+> Parser behavior and file system path handling are guaranteed only on Windows environments.
+
 ## Overview
 
 The T024 Parser Service Implementation has been **successfully completed** with a comprehensive multi-language parser service that converts various source code and specification formats into a standardized AST format.

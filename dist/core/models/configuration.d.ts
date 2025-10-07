@@ -207,6 +207,8 @@ export interface SecuritySettings {
         readonly encryptInTransit: boolean;
         readonly algorithm: string;
         readonly keyRotation: boolean;
+        /** Added for runtime feature gating */
+        readonly enabled?: boolean;
     };
     readonly audit: {
         readonly enableAuditLog: boolean;

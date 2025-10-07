@@ -1,5 +1,8 @@
 # CLI Service Implementation (T023)
 
+> ⚠️ **Windows-Only CLI**  
+> All CLI usage, examples, and scripts are validated only under Windows (PowerShell). Unix shells are out of scope.
+
 This directory contains the complete CLI service implementation for the API Documentation Generator, implementing the CLI API contract specifications.
 
 ## Structure

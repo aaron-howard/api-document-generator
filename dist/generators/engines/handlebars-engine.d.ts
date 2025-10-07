@@ -26,7 +26,7 @@ export declare class HandlebarsEngine implements ITemplateEngine {
     readonly supportedFormats: string[];
     private helpers;
     private partials;
-    private _config;
+    private _internalConfig;
     constructor(config?: HandlebarsConfig);
     /**
      * Compile template string

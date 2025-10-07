@@ -351,7 +351,8 @@ class ConfigurationFactory {
                 encryptAtRest: false,
                 encryptInTransit: true,
                 algorithm: 'AES-256',
-                keyRotation: false
+                keyRotation: false,
+                enabled: true
             },
             audit: {
                 enableAuditLog: false,

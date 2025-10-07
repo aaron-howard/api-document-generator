@@ -250,7 +250,7 @@ export interface GenerationError {
     code: string;
     message: string;
     details?: Record<string, any>;
-    suggestions?: string[];
+    suggestions?: string[] | undefined;
 }
 /**
  * Template engine interface for pluggable template engines
@@ -322,8 +322,7 @@ export declare class GenerationService {
     private generators;
     private templates;
     private themes;
-    private _assetManager;
-    constructor(options?: GenerationServiceOptions);
+    constructor(_options?: GenerationServiceOptions);
     /**
      * Register a template engine
      */
@@ -386,6 +385,9 @@ export interface GenerationServiceOptions {
     };
     engineConfig?: Record<string, any>;
 }
+/**
+ * Asset Manager for handling template assets
+ */
 /**
  * Generation Service specific error class
  */

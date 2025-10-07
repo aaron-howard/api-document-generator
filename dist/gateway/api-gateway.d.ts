@@ -297,5 +297,4 @@ export declare class APIGateway {
      */
     getStats(): any;
 }
-export { APIGatewayConfig, APIRequestContext, APIResponse, WebSocketMessageType, WebSocketClient, WebhookConfig, GenerationJob };
 //# sourceMappingURL=api-gateway.d.ts.map

@@ -98,7 +98,9 @@ class CLIApp {
             throw new Error('Two input files are required for diff command (old version and new version)');
         }
         const diffCommand = new diff_1.DiffCommand();
-        const result = await diffCommand.execute(inputs[0], inputs[1], options);
+        const oldFile = inputs[0]; // validated length >= 2
+        const newFile = inputs[1];
+        const result = await diffCommand.execute(oldFile, newFile, options);
         this.displayDiffResult(result, options);
     }
     /**
@@ -140,6 +142,8 @@ class CLIApp {
         const options = {};
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
+            if (!arg)
+                continue; // safety
             if (arg.startsWith('--')) {
                 const key = arg.slice(2);
                 const nextArg = args[i + 1];
@@ -179,7 +183,7 @@ class CLIApp {
         if (index === 0)
             return false;
         const prevArg = args[index - 1];
-        return prevArg.startsWith('-');
+        return typeof prevArg === 'string' && prevArg.startsWith('-');
     }
     /**
      * Display generation result

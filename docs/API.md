@@ -1,5 +1,8 @@
 # API Reference Documentation
 
+> ⚠️ **Environment Limitation**  
+> All code and CLI examples assume execution in a Windows (PowerShell) environment. Non-Windows platforms are unsupported and may produce inconsistent results.
+
 ## Table of Contents
 
 - [Core Classes](#core-classes)

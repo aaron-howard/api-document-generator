@@ -22,6 +22,7 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const compression_1 = __importDefault(require("compression"));
 const morgan_1 = __importDefault(require("morgan"));
 const configuration_1 = require("../core/models/configuration");
+// Removed unused fs/path imports
 const ws_1 = __importDefault(require("ws"));
 const http_1 = require("http");
 const uuid_1 = require("uuid");
@@ -48,7 +49,7 @@ class APIGateway {
         this.jobs = new Map();
         this.webhooks = [];
         this.isRunning = false;
-        this.config = {
+        const defaults = {
             port: 3000,
             host: 'localhost',
             environment: configuration_1.Environment.DEVELOPMENT,
@@ -58,12 +59,12 @@ class APIGateway {
             enableWebSocket: true,
             enableGraphQL: true,
             enableSwagger: true,
-            rateLimitWindow: 900000, // 15 minutes
+            rateLimitWindow: 900000,
             rateLimitMax: 100,
             maxFileSize: '10mb',
-            apiPrefix: '/api/v1',
-            ...config
+            apiPrefix: '/api/v1'
         };
+        this.config = { ...defaults, ...config };
         this.app = (0, express_1.default)();
         this.setupMiddleware();
         this.setupRoutes();
@@ -381,13 +382,14 @@ class APIGateway {
      * Create request context middleware
      */
     createRequestContextMiddleware() {
-        return (req, res, next) => {
+        return (req, _res, next) => {
             req.context = {
                 requestId: (0, uuid_1.v4)(),
                 clientInfo: {
                     userAgent: req.get('User-Agent') || 'unknown',
                     ip: req.ip || req.connection.remoteAddress || 'unknown',
-                    origin: req.get('Origin')
+                    // Skip origin when absent to satisfy exactOptionalPropertyTypes
+                    ...(req.get('Origin') ? { origin: req.get('Origin') } : {})
                 },
                 timestamp: new Date(),
                 metadata: {}
@@ -400,14 +402,15 @@ class APIGateway {
      */
     createAuthenticationMiddleware() {
         return (req, res, next) => {
-            const authHeader = req.get('Authorization');
+            // const authHeader = req.get('Authorization'); // reserved for future
             const apiKey = req.get('X-API-Key');
             if (this.config.auth?.type === 'api-key') {
                 if (!apiKey || !this.config.auth.apiKeys?.includes(apiKey)) {
-                    return res.status(401).json(this.createResponse(false, null, {
+                    res.status(401).json(this.createResponse(false, null, {
                         code: 'UNAUTHORIZED',
                         message: 'Invalid or missing API key'
                     }, req));
+                    return;
                 }
             }
             // Add more authentication logic as needed
@@ -418,20 +421,14 @@ class APIGateway {
      * Create error handling middleware
      */
     createErrorHandlingMiddleware() {
-        return async (error, req, res, next) => {
+        return async (error, req, res, _next) => {
             if (this.services?.errorHandler) {
                 await this.services.errorHandler.handleError(error, {
                     serviceName: 'APIGateway',
-                    operation: req.path,
-                    severity: 'error',
-                    metadata: {
-                        method: req.method,
-                        url: req.url,
-                        userAgent: req.get('User-Agent')
-                    }
+                    operation: req.path
                 });
             }
-            res.status(500).json(this.createResponse(false, null, {
+            return res.status(500).json(this.createResponse(false, null, {
                 code: 'INTERNAL_SERVER_ERROR',
                 message: 'An unexpected error occurred'
             }, req));
@@ -512,9 +509,18 @@ class APIGateway {
      */
     async handleParseSpecification(req, res) {
         try {
-            const { content, format } = req.body;
-            const result = await this.services.parserService.parseSpecification(content, format);
-            res.json(this.createResponse(true, result, undefined, req));
+            const { content, parserType = 'openapi', options } = req.body;
+            if (!content) {
+                res.status(400).json(this.createResponse(false, null, { code: 'MISSING_CONTENT', message: 'Content required' }, req));
+                return;
+            }
+            const parseResult = await this.services.parserService.parse({
+                type: parserType,
+                source: 'content',
+                path: 'inline',
+                options: options || { validateSchema: true }
+            });
+            res.json(this.createResponse(true, parseResult, undefined, req));
         }
         catch (error) {
             res.status(400).json(this.createResponse(false, null, {
@@ -528,9 +534,22 @@ class APIGateway {
      */
     async handleValidateSpecification(req, res) {
         try {
-            const { content, format } = req.body;
-            const result = await this.services.parserService.validateSpecification(content, format);
-            res.json(this.createResponse(true, result, undefined, req));
+            const { content, parserType = 'openapi', rules } = req.body;
+            if (!content) {
+                res.status(400).json(this.createResponse(false, null, { code: 'MISSING_CONTENT', message: 'Content required' }, req));
+                return;
+            }
+            const parseResult = await this.services.parserService.parse({
+                type: parserType,
+                source: 'content',
+                path: 'inline',
+                options: { validateSchema: true }
+            });
+            let validation = null;
+            if (parseResult.parseId) {
+                validation = await this.services.parserService.validate({ parseId: parseResult.parseId, rules });
+            }
+            res.json(this.createResponse(true, { parse: parseResult, validation }, undefined, req));
         }
         catch (error) {
             res.status(400).json(this.createResponse(false, null, {
@@ -544,8 +563,17 @@ class APIGateway {
      */
     async handleEnhanceDocumentation(req, res) {
         try {
-            const { content, options } = req.body;
-            const result = await this.services.aiService.enhanceDocumentation(content, options);
+            const { content, type = 'description', context, options } = req.body;
+            if (!content) {
+                res.status(400).json(this.createResponse(false, null, { code: 'MISSING_CONTENT', message: 'Content required' }, req));
+                return;
+            }
+            const result = await this.services.aiService.enhance({
+                content,
+                type,
+                context,
+                options
+            });
             res.json(this.createResponse(true, result, undefined, req));
         }
         catch (error) {
@@ -560,9 +588,23 @@ class APIGateway {
      */
     async handleGenerateContent(req, res) {
         try {
-            const { prompt, options } = req.body;
-            const result = await this.services.aiService.generateContent(prompt, options);
-            res.json(this.createResponse(true, result, undefined, req));
+            const { prompt, options, context } = req.body;
+            if (!prompt) {
+                res.status(400).json(this.createResponse(false, null, { code: 'MISSING_PROMPT', message: 'Prompt required' }, req));
+                return;
+            }
+            // Use summarize as a simple content-like generation
+            const summarizeReq = {
+                endpoint: {
+                    path: '/virtual',
+                    method: 'GET',
+                    description: prompt
+                },
+                context,
+                options: options || { style: 'concise' }
+            };
+            const result = await this.services.aiService.summarize(summarizeReq);
+            res.json(this.createResponse(true, { generated: result.enhancedSummary || result.enhancedDescription, raw: result }, undefined, req));
         }
         catch (error) {
             res.status(500).json(this.createResponse(false, null, {
@@ -603,13 +645,14 @@ class APIGateway {
      * Handle get generation job
      */
     async handleGetGenerationJob(req, res) {
-        const jobId = req.params.jobId;
-        const job = this.jobs.get(jobId);
+        const jobId = req.params['jobId'];
+        const job = jobId ? this.jobs.get(jobId) : undefined;
         if (!job) {
-            return res.status(404).json(this.createResponse(false, null, {
+            res.status(404).json(this.createResponse(false, null, {
                 code: 'JOB_NOT_FOUND',
                 message: 'Generation job not found'
             }, req));
+            return;
         }
         res.json(this.createResponse(true, job, undefined, req));
     }
@@ -683,7 +726,7 @@ class APIGateway {
      */
     async handleGetUserPreferences(req, res) {
         try {
-            const userId = req.params.userId;
+            const userId = req.params['userId'];
             const preferences = await this.services.configManager.loadUserPreferences(userId);
             res.json(this.createResponse(true, preferences, undefined, req));
         }
@@ -699,7 +742,7 @@ class APIGateway {
      */
     async handleUpdateUserPreferences(req, res) {
         try {
-            const userId = req.params.userId;
+            const userId = req.params['userId'];
             const preferences = req.body;
             await this.services.configManager.saveUserPreferences(preferences, userId);
             res.json(this.createResponse(true, { message: 'Preferences updated successfully' }, undefined, req));
@@ -738,7 +781,7 @@ class APIGateway {
      */
     async handleDeleteWebhook(req, res) {
         try {
-            const id = req.params.id;
+            const id = req.params['id'];
             this.webhooks = this.webhooks.filter(webhook => webhook.url !== id);
             res.json(this.createResponse(true, { message: 'Webhook deleted successfully' }, undefined, req));
         }
@@ -888,10 +931,11 @@ class APIGateway {
      * Create standardized API response
      */
     createResponse(success, data, error, req) {
+        const errObj = error ? { code: error.code, message: error.message, timestamp: new Date() } : undefined;
         return {
             success,
             data,
-            error: error ? { ...error, timestamp: new Date() } : undefined,
+            error: errObj,
             metadata: {
                 requestId: req?.context?.requestId || 'unknown',
                 processingTime: req?.context ? Date.now() - req.context.timestamp.getTime() : 0,
@@ -915,4 +959,6 @@ class APIGateway {
     }
 }
 exports.APIGateway = APIGateway;
+// Export types and classes
+// re-export removed to prevent duplicate export conflicts (interfaces already exported above)
 //# sourceMappingURL=api-gateway.js.map

@@ -1,5 +1,8 @@
 # AI Service Implementation
 
+> ⚠️ **Windows Platform Notice**  
+> The AI service functionality is supported only when executed on Windows. Any Linux/macOS execution paths are unsupported.
+
 ## Overview
 
 The AI Service is a comprehensive AI-powered documentation enhancement system that provides intelligent summarization, content enhancement, validation, and batch processing capabilities. It integrates with OpenAI GPT-4 and other AI providers to deliver high-quality documentation improvements.

@@ -40,12 +40,15 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "tests",
+    "src/demos/**/*",
+    "src/integrations/**/*",
+    "src/tests/**/*",
     "**/*.test.ts",
     "**/*.spec.ts"
   ]

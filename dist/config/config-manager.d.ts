@@ -42,7 +42,7 @@ export interface ConfigurationChangeEvent {
     readonly path?: string;
     readonly changes: readonly string[];
     readonly timestamp: Date;
-    readonly userId?: string;
+    readonly userId?: string | undefined;
     readonly metadata: Record<string, any>;
 }
 /**
@@ -144,7 +144,6 @@ export declare class ConfigurationManager {
     private configuration;
     private userPreferences;
     private environmentVariables;
-    private watchers;
     private changeListeners;
     private backups;
     private performanceMonitor?;

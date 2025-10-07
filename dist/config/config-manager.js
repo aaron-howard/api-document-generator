@@ -79,7 +79,9 @@ class ConfigurationManager {
         this.configuration = null;
         this.userPreferences = null;
         this.environmentVariables = {};
-        this.watchers = new Map();
+        // File watchers placeholder (implementation deferred)
+        // Removed active usage to reduce unused variable warnings under strict mode
+        // private watchers: Map<string, ConfigurationWatcher> = new Map();
         this.changeListeners = new Set();
         this.backups = new Map();
         this.options = {
@@ -106,9 +108,12 @@ class ConfigurationManager {
      * Initialize configuration manager with service integrations
      */
     async initialize(performanceMonitor, errorHandler, cacheManager) {
-        this.performanceMonitor = performanceMonitor;
-        this.errorHandler = errorHandler;
-        this.cacheManager = cacheManager;
+        if (performanceMonitor)
+            this.performanceMonitor = performanceMonitor;
+        if (errorHandler)
+            this.errorHandler = errorHandler;
+        if (cacheManager)
+            this.cacheManager = cacheManager;
         try {
             // Create configuration directories
             await this.ensureDirectories();
@@ -294,7 +299,7 @@ class ConfigurationManager {
                 path: prefsPath,
                 changes: ['user-preferences'],
                 timestamp: new Date(),
-                userId,
+                userId: userId || undefined,
                 metadata: {}
             });
         }
@@ -449,8 +454,6 @@ class ConfigurationManager {
             }
             const result = {
                 success: false,
-                configuration: undefined,
-                userPreferences: undefined,
                 errors: [],
                 warnings: [],
                 imported: [],
@@ -529,8 +532,8 @@ class ConfigurationManager {
             if (!config.performanceSettings.caching?.enabled) {
                 performanceIssues.push('Caching is not enabled');
             }
-            if (config.performanceSettings.concurrent?.maxWorkers && config.performanceSettings.concurrent.maxWorkers > 16) {
-                performanceIssues.push('High number of concurrent workers may impact performance');
+            if (config.performanceSettings.parallelization?.maxWorkers && config.performanceSettings.parallelization.maxWorkers > 16) {
+                performanceIssues.push('High number of parallel workers may impact performance');
             }
         }
         // Generate suggestions
@@ -605,9 +608,7 @@ class ConfigurationManager {
             clearInterval(this.reloadTimer);
         }
         // Stop file watchers
-        for (const watcher of this.watchers.values()) {
-            // Stop watching implementation would go here
-        }
+        // (File watchers would be stopped here when implemented)
         // Clear listeners
         this.changeListeners.clear();
         // Clean up old backups
@@ -655,7 +656,7 @@ class ConfigurationManager {
             }
         }
     }
-    loadEnvironmentConfiguration(context) {
+    loadEnvironmentConfiguration(_context) {
         const config = {};
         // Map environment variables to configuration
         for (const [key, value] of Object.entries(this.environmentVariables)) {
@@ -672,7 +673,7 @@ class ConfigurationManager {
         try {
             const preferences = await this.loadUserPreferences(context.userId);
             return {
-                userPreferences: preferences
+                userPreferences: preferences // relaxed typing for aggregation partial
             };
         }
         catch (error) {
@@ -771,10 +772,10 @@ class ConfigurationManager {
     async handleError(message, error) {
         if (this.errorHandler) {
             await this.errorHandler.handleError(error, {
-                context: 'ConfigurationManager',
+                serviceName: 'ConfigurationManager',
                 operation: message,
                 severity: 'medium',
-                metadata: { error: error.message }
+                metadata: { error: error instanceof Error ? error.message : String(error) }
             });
         }
         else {
@@ -794,17 +795,23 @@ class ConfigurationManager {
         return result;
     }
     setNestedProperty(obj, path, value) {
-        const keys = path.split('_');
-        let current = obj;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) {
-                current[keys[i]] = {};
+        if (!path)
+            return;
+        const segments = path.split('_').filter(Boolean);
+        if (segments.length === 0)
+            return;
+        let cursor = obj;
+        for (let i = 0; i < segments.length - 1; i++) {
+            const key = segments[i];
+            if (cursor[key] == null || typeof cursor[key] !== 'object') {
+                cursor[key] = {};
             }
-            current = current[keys[i]];
+            cursor = cursor[key];
         }
-        current[keys[keys.length - 1]] = value;
+        const leaf = segments[segments.length - 1];
+        cursor[leaf] = value;
     }
-    filterConfigurationByCategories(config, categories) {
+    filterConfigurationByCategories(config, _categories) {
         // Implementation for filtering configuration by categories
         return config;
     }
