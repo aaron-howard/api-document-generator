@@ -12,7 +12,9 @@ import { DataModel } from '../core/models/schema';
  * Parser Service API request/response interfaces based on parser-service.yaml contract
  */
 export interface ParseRequest {
-  type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql';
+  type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql'
+    | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture'
+    | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
   source: 'file' | 'directory' | 'url' | 'content';
   path: string;
   options?: {
@@ -258,6 +260,21 @@ export class ParserService {
       this.registry.register('graphql', new GraphQLParser());
     } catch (error) {
       console.warn('GraphQL parser not available:', (error as Error).message);
+    }
+
+    // Register new documentation parsers
+    try {
+      const DeveloperGuideParser = (await import('./languages/developer-guide-parser')).default;
+      this.registry.register('developer-guide', new DeveloperGuideParser());
+    } catch (error) {
+      console.warn('Developer Guide parser not available:', (error as Error).message);
+    }
+
+    try {
+      const ChangelogParser = (await import('./languages/changelog-parser')).default;
+      this.registry.register('changelog', new ChangelogParser());
+    } catch (error) {
+      console.warn('Changelog parser not available:', (error as Error).message);
     }
     
     this.initialized = true;

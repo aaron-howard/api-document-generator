@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as API Gateway
+    participant Auth as Auth Service
+    participant D as User Database
+    
+    U->>F: Login Request
+    F->>A: POST /auth/login
+    A->>Auth: Validate Credentials
+    Auth->>D: Check User Credentials
+    D-->>Auth: User Data
+    Auth-->>A: JWT Token
+    A-->>F: Token Response
+    F->>F: Store Token
+    F->>A: API Request with Token
+    A->>Auth: Validate Token
+    Auth-->>A: Token Valid
+    A->>A: Process Request
+    A-->>F: API Response
+    
+    Note over Auth,D: Secure credential validation and token generation

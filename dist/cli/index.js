@@ -67,10 +67,12 @@ class CLIApp {
      */
     async executeGenerate(args) {
         const options = this.parseOptions(args);
-        const inputs = this.parseInputs(args);
-        if (inputs.length === 0) {
-            throw new Error('At least one input file is required for generate command');
+        // Check for help flag
+        if (options['help']) {
+            console.log(generate_1.GenerateCommand.getHelpText());
+            return;
         }
+        const inputs = this.parseInputs(args);
         const generateCommand = new generate_1.GenerateCommand();
         const result = await generateCommand.execute(inputs, options);
         this.displayGenerationResult(result);
@@ -147,12 +149,14 @@ class CLIApp {
             if (arg.startsWith('--')) {
                 const key = arg.slice(2);
                 const nextArg = args[i + 1];
+                // Convert kebab-case to camelCase
+                const camelKey = key.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
                 if (nextArg && !nextArg.startsWith('-')) {
-                    options[key] = nextArg;
+                    options[camelKey] = nextArg;
                     i++; // Skip next argument
                 }
                 else {
-                    options[key] = true;
+                    options[camelKey] = true;
                 }
             }
             else if (arg.startsWith('-') && arg.length === 2) {

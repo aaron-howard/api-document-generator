@@ -15,8 +15,10 @@ A powerful, multi-runtime CLI tool for generating comprehensive API documentatio
 ## 🚀 Features
 
 - **Multi-Source Support**: Extract documentation from OpenAPI specs, TypeScript/JavaScript JSDoc, Python docstrings, and more
+- **Full Application Documentation**: Generate comprehensive documentation for entire applications, not just APIs
+- **Multiple Documentation Types**: Support for 9 different documentation types including developer guides, changelogs, architecture docs, and more
 - **AI-Enhanced Documentation**: Leverage GPT-4 to improve and expand documentation quality
-- **Multiple Output Formats**: Generate HTML, Markdown, PDF, and JSON documentation
+- **Multiple Output Formats**: Generate HTML, Markdown, PDF, JSON, and UML documentation
 - **Multi-Runtime**: Works with Node.js 18+, Python 3.9+, and Go 1.19+
 - **Template Customization**: Fully customizable templates using Handlebars
 - **Performance Optimized**: Handles large codebases with concurrent processing
@@ -27,6 +29,7 @@ A powerful, multi-runtime CLI tool for generating comprehensive API documentatio
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Documentation Types](#documentation-types)
 - [Configuration](#configuration)
 - [Usage Examples](#usage-examples)
 - [API Reference](#api-reference)
@@ -142,6 +145,92 @@ module.exports = {
 ```bash
 api-doc-gen generate
 ```
+
+## 📚 Documentation Types
+
+The API Documentation Generator now supports comprehensive application documentation beyond just APIs. Use the `--doc-type` flag to specify the type of documentation you want to generate:
+
+### Supported Documentation Types
+
+| Type | Description | Common Sources | Auto-detected Files |
+|------|-------------|----------------|-------------------|
+| `api` | API documentation (default) | OpenAPI specs, JSDoc, Python docstrings | `*.yaml`, `*.json`, `*.ts`, `*.py` |
+| `developer-guide` | Developer setup and guidelines | CONTRIBUTING.md, DEVELOPMENT.md | `CONTRIBUTING.md`, `DEVELOPMENT.md`, `docs/development/` |
+| `changelog` | Version history and release notes | CHANGELOG.md, HISTORY.md | `CHANGELOG.md`, `HISTORY.md`, `docs/releases/` |
+| `product-overview` | Product description and features | README.md, vision docs | `README.md`, `docs/overview/` |
+| `architecture` | System design and architecture | ARCHITECTURE.md, design docs | `ARCHITECTURE.md`, `docs/architecture/` |
+| `user-guide` | End-user documentation | USER_GUIDE.md, tutorials | `USER_GUIDE.md`, `docs/user-guide/`, `FAQ.md` |
+| `security` | Security policies and procedures | SECURITY.md, compliance docs | `SECURITY.md`, `docs/security/` |
+| `onboarding` | New team member guides | Training materials, tutorials | `docs/onboarding/`, `ONBOARDING.md` |
+| `monitoring` | Operations and monitoring docs | Runbooks, monitoring guides | `docs/monitoring/`, `docs/operations/` |
+
+## 🎨 UML Diagram Generation
+
+The generator can create UML diagrams in Mermaid format for various documentation types:
+
+### Supported Diagram Types
+
+- **Architecture Diagrams**: System architecture and component relationships
+- **Sequence Diagrams**: API request flows and user interactions  
+- **Flowcharts**: Process flows and decision trees
+- **Class Diagrams**: Code structure and relationships (for API documentation)
+
+### UML Output Examples
+
+```bash
+# Generate architecture diagram
+api-doc-gen generate --doc-type architecture --format uml ARCHITECTURE.md
+
+# Generate API sequence diagram
+api-doc-gen generate --doc-type api --format uml openapi.yaml
+
+# Generate developer workflow diagram
+api-doc-gen generate --doc-type developer-guide --format uml CONTRIBUTING.md
+```
+
+### UML Diagram Types by Documentation Type
+
+| Documentation Type | Default Diagram Type | Description |
+|-------------------|---------------------|-------------|
+| `architecture` | Architecture Diagram | System components and relationships |
+| `api` | Sequence Diagram | API request/response flows |
+| `developer-guide` | Flowchart | Development workflow and processes |
+| `user-guide` | Flowchart | User journey and feature usage |
+| `security` | Sequence Diagram | Authentication and security flows |
+| `monitoring` | Sequence Diagram | Monitoring and alerting flows |
+
+### Usage Examples
+
+```bash
+# Generate developer guide from CONTRIBUTING.md
+api-doc-gen generate --doc-type developer-guide CONTRIBUTING.md
+
+# Generate changelog documentation
+api-doc-gen generate --doc-type changelog CHANGELOG.md
+
+# Generate product overview from README.md
+api-doc-gen generate --doc-type product-overview README.md
+
+# Auto-detect and generate from common file locations
+api-doc-gen generate --doc-type developer-guide
+api-doc-gen generate --doc-type changelog
+
+# Generate multiple formats
+api-doc-gen generate --doc-type architecture --format html,markdown ARCHITECTURE.md
+```
+
+### Auto-Detection
+
+When you specify a `--doc-type` without providing input files, the tool will automatically search for common file locations:
+
+- **Developer Guide**: `./CONTRIBUTING.md`, `./DEVELOPMENT.md`, `./docs/development/`
+- **Changelog**: `./CHANGELOG.md`, `./HISTORY.md`, `./docs/releases/`
+- **Product Overview**: `./README.md`, `./docs/overview/`
+- **Architecture**: `./ARCHITECTURE.md`, `./docs/architecture/`
+- **User Guide**: `./USER_GUIDE.md`, `./docs/user-guide/`, `./FAQ.md`
+- **Security**: `./SECURITY.md`, `./docs/security/`
+- **Onboarding**: `./docs/onboarding/`, `./ONBOARDING.md`
+- **Monitoring**: `./docs/monitoring/`, `./docs/operations/`
 
 ## ⚙️ Configuration
 

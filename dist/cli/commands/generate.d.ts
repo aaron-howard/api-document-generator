@@ -10,6 +10,7 @@ export interface GenerateCommandOptions {
     config?: string;
     output?: string;
     format?: string | string[];
+    docType?: string;
     ai?: boolean;
     validate?: boolean;
     force?: boolean;
@@ -29,9 +30,13 @@ export declare class GenerateCommand {
      */
     private buildGenerationRequest;
     /**
-     * Detect input type from file path
+     * Detect input type from file path and doc-type option
      */
     private detectInputType;
+    /**
+     * Get default file paths for documentation type
+     */
+    private getDefaultPathsForDocType;
     /**
      * Validate generation request
      */
@@ -60,6 +65,50 @@ export declare class GenerateCommand {
      * Generate PDF content (simplified - would need proper PDF library)
      */
     private generatePDFContent;
+    /**
+     * Generate Developer Guide content
+     */
+    private generateDeveloperGuideContent;
+    /**
+     * Generate Changelog content
+     */
+    private generateChangelogContent;
+    /**
+     * Generate content based on documentation type
+     */
+    private generateContentByType;
+    /**
+     * Get filename for documentation type and format
+     */
+    private getFilenameForDocType;
+    /**
+     * Generate Product Overview content
+     */
+    private generateProductOverviewContent;
+    /**
+     * Generate Architecture content
+     */
+    private generateArchitectureContent;
+    /**
+     * Generate User Guide content
+     */
+    private generateUserGuideContent;
+    /**
+     * Generate Security content
+     */
+    private generateSecurityContent;
+    /**
+     * Generate Onboarding content
+     */
+    private generateOnboardingContent;
+    /**
+     * Generate Monitoring content
+     */
+    private generateMonitoringContent;
+    /**
+     * Generate UML content based on documentation type
+     */
+    private generateUMLContent;
     /**
      * Get command help text
      */

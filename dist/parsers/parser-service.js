@@ -153,6 +153,21 @@ class ParserService {
         catch (error) {
             console.warn('GraphQL parser not available:', error.message);
         }
+        // Register new documentation parsers
+        try {
+            const DeveloperGuideParser = (await Promise.resolve().then(() => __importStar(require('./languages/developer-guide-parser')))).default;
+            this.registry.register('developer-guide', new DeveloperGuideParser());
+        }
+        catch (error) {
+            console.warn('Developer Guide parser not available:', error.message);
+        }
+        try {
+            const ChangelogParser = (await Promise.resolve().then(() => __importStar(require('./languages/changelog-parser')))).default;
+            this.registry.register('changelog', new ChangelogParser());
+        }
+        catch (error) {
+            console.warn('Changelog parser not available:', error.message);
+        }
         this.initialized = true;
     }
     /**

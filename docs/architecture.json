@@ -1,0 +1,29 @@
+{
+  "project": {
+    "name": "API Documentation",
+    "version": "1.0.0",
+    "description": "API Documentation",
+    "generatedAt": "2025-10-10T01:28:24.393Z"
+  },
+  "endpoints": [
+    {
+      "path": "/api/ARCHITECTURE.md",
+      "method": "GET",
+      "source": "architecture",
+      "file": "ARCHITECTURE.md",
+      "description": "API endpoint from ARCHITECTURE.md"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "architecture",
+      "path": "ARCHITECTURE.md",
+      "enabled": true
+    }
+  ],
+  "metadata": {
+    "totalEndpoints": 1,
+    "generatedAt": "2025-10-10T01:28:24.393Z",
+    "generator": "API Documentation Generator v1.0.0"
+  }
+}

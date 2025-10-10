@@ -1,0 +1,60 @@
+graph TB
+    subgraph "API Documentation - System Architecture"
+    subgraph "Frontend Layer"
+        WA[Web Application]
+        MA[Mobile App]
+        AD[Admin Dashboard]
+    end
+    
+    subgraph "API Gateway"
+        LB[Load Balancer]
+        AG[API Gateway]
+        AUTH[Authentication]
+    end
+    
+    subgraph "Backend Services"
+        US[User Service]
+        PS[Product Service]
+        OS[Order Service]
+        PAYS[Payment Service]
+    end
+    
+    subgraph "Data Layer"
+        UDB[(User Database)]
+        PDB[(Product Database)]
+        ODB[(Order Database)]
+    end
+    
+    subgraph "External Services"
+        PG[Payment Gateway]
+        ES[Email Service]
+        FS[File Storage]
+    end
+    
+    WA --> LB
+    MA --> LB
+    AD --> LB
+    LB --> AG
+    AG --> AUTH
+    AG --> US
+    AG --> PS
+    AG --> OS
+    AG --> PAYS
+    US --> UDB
+    PS --> PDB
+    OS --> ODB
+    PAYS --> PG
+    US --> ES
+    PS --> FS
+    
+    classDef frontend fill:#e1f5fe
+    classDef gateway fill:#f3e5f5
+    classDef service fill:#e8f5e8
+    classDef database fill:#fff3e0
+    classDef external fill:#fce4ec
+    
+    class WA,MA,AD frontend
+    class LB,AG,AUTH gateway
+    class US,PS,OS,PAYS service
+    class UDB,PDB,ODB database
+    class PG,ES,FS external

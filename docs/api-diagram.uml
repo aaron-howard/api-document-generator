@@ -1,0 +1,6 @@
+flowchart TD
+    A[Initialize Process] --> B[Process Data]
+    B --> C[Generate Output]
+    
+    classDef process fill:#2196f3,color:#fff
+    class A,B,C process

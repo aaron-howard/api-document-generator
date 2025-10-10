@@ -1,0 +1,29 @@
+{
+  "project": {
+    "name": "API Documentation",
+    "version": "1.0.0",
+    "description": "API Documentation",
+    "generatedAt": "2025-10-10T01:14:00.592Z"
+  },
+  "endpoints": [
+    {
+      "path": "/api/./CONTRIBUTING.md",
+      "method": "GET",
+      "source": "developer-guide",
+      "file": "./CONTRIBUTING.md",
+      "description": "API endpoint from ./CONTRIBUTING.md"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "developer-guide",
+      "path": "./CONTRIBUTING.md",
+      "enabled": true
+    }
+  ],
+  "metadata": {
+    "totalEndpoints": 1,
+    "generatedAt": "2025-10-10T01:14:00.592Z",
+    "generator": "API Documentation Generator v1.0.0"
+  }
+}

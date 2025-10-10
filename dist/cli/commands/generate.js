@@ -38,11 +38,23 @@ class GenerateCommand {
             version: '1.0.0'
         };
         // Process input sources
-        const processedInputs = inputs.map(input => ({
-            type: this.detectInputType(input),
-            path: input,
-            enabled: true
-        }));
+        let processedInputs;
+        if (inputs.length === 0 && options.docType && options.docType !== 'api') {
+            // Auto-detect common file locations for documentation types
+            const defaultPaths = this.getDefaultPathsForDocType(options.docType);
+            processedInputs = defaultPaths.map(path => ({
+                type: options.docType,
+                path: path,
+                enabled: true
+            }));
+        }
+        else {
+            processedInputs = inputs.map(input => ({
+                type: this.detectInputType(input, options.docType),
+                path: input,
+                enabled: true
+            }));
+        }
         // Process output formats
         const formatString = options.format || 'markdown';
         let outputFormats;
@@ -73,10 +85,40 @@ class GenerateCommand {
         };
     }
     /**
-     * Detect input type from file path
+     * Detect input type from file path and doc-type option
      */
-    detectInputType(path) {
+    detectInputType(path, docType) {
+        // If doc-type is specified, use it
+        if (docType && docType !== 'api') {
+            return docType;
+        }
         const ext = path.toLowerCase();
+        // Check for documentation type indicators in filename
+        if (ext.includes('contributing') || ext.includes('development') || ext.includes('dev-guide')) {
+            return 'developer-guide';
+        }
+        if (ext.includes('changelog') || ext.includes('history') || ext.includes('releases')) {
+            return 'changelog';
+        }
+        if (ext.includes('readme') || ext.includes('overview') || ext.includes('vision')) {
+            return 'product-overview';
+        }
+        if (ext.includes('architecture') || ext.includes('design') || ext.includes('system')) {
+            return 'architecture';
+        }
+        if (ext.includes('user-guide') || ext.includes('tutorial') || ext.includes('faq')) {
+            return 'user-guide';
+        }
+        if (ext.includes('security') || ext.includes('compliance')) {
+            return 'security';
+        }
+        if (ext.includes('onboarding') || ext.includes('training')) {
+            return 'onboarding';
+        }
+        if (ext.includes('monitoring') || ext.includes('operations') || ext.includes('runbook')) {
+            return 'monitoring';
+        }
+        // Original API detection logic
         if (ext.includes('openapi') || ext.includes('swagger') || ext.endsWith('.yaml') || ext.endsWith('.yml') || ext.endsWith('.json')) {
             return 'openapi';
         }
@@ -92,8 +134,69 @@ class GenerateCommand {
         if (ext.includes('graphql') || ext.endsWith('.gql') || ext.endsWith('.graphql')) {
             return 'graphql';
         }
-        // Default to OpenAPI
+        // Default to OpenAPI for API documentation
         return 'openapi';
+    }
+    /**
+     * Get default file paths for documentation type
+     */
+    getDefaultPathsForDocType(docType) {
+        const fs = require('fs');
+        switch (docType) {
+            case 'developer-guide':
+                return [
+                    './CONTRIBUTING.md',
+                    './DEVELOPMENT.md',
+                    './docs/development/',
+                    './docs/dev/'
+                ].filter(p => fs.existsSync(p));
+            case 'changelog':
+                return [
+                    './CHANGELOG.md',
+                    './HISTORY.md',
+                    './docs/releases/',
+                    './docs/changelog/'
+                ].filter(p => fs.existsSync(p));
+            case 'product-overview':
+                return [
+                    './README.md',
+                    './docs/overview/',
+                    './docs/product/'
+                ].filter(p => fs.existsSync(p));
+            case 'architecture':
+                return [
+                    './ARCHITECTURE.md',
+                    './docs/architecture/',
+                    './docs/design/'
+                ].filter(p => fs.existsSync(p));
+            case 'user-guide':
+                return [
+                    './USER_GUIDE.md',
+                    './docs/user-guide/',
+                    './docs/tutorials/',
+                    './FAQ.md'
+                ].filter(p => fs.existsSync(p));
+            case 'security':
+                return [
+                    './SECURITY.md',
+                    './docs/security/',
+                    './docs/compliance/'
+                ].filter(p => fs.existsSync(p));
+            case 'onboarding':
+                return [
+                    './docs/onboarding/',
+                    './docs/training/',
+                    './ONBOARDING.md'
+                ].filter(p => fs.existsSync(p));
+            case 'monitoring':
+                return [
+                    './docs/monitoring/',
+                    './docs/operations/',
+                    './docs/runbooks/'
+                ].filter(p => fs.existsSync(p));
+            default:
+                return [];
+        }
     }
     /**
      * Validate generation request
@@ -136,23 +239,29 @@ class GenerateCommand {
                 // Generate content based on format
                 let content;
                 let filename;
+                // Determine content type based on input type
+                const inputType = request.inputs[0]?.type || 'openapi';
                 switch (output.format) {
                     case 'html':
                         content = this.generateHTMLContent(request);
-                        filename = 'api.html';
+                        filename = this.getFilenameForDocType(inputType, 'html');
                         break;
                     case 'pdf':
                         content = this.generatePDFContent(request);
-                        filename = 'api.pdf';
+                        filename = this.getFilenameForDocType(inputType, 'pdf');
                         break;
                     case 'json':
                         content = this.generateJSONContent(request);
-                        filename = 'api.json';
+                        filename = this.getFilenameForDocType(inputType, 'json');
+                        break;
+                    case 'uml':
+                        content = this.generateUMLContent(request, inputType);
+                        filename = this.getFilenameForDocType(inputType, 'uml');
                         break;
                     case 'markdown':
                     default:
-                        content = this.generateMarkdownContent(request);
-                        filename = 'api.md';
+                        content = this.generateContentByType(request, inputType);
+                        filename = this.getFilenameForDocType(inputType, 'md');
                         break;
                 }
                 // Write file to disk
@@ -298,6 +407,345 @@ ${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
         return this.generateHTMLContent(request);
     }
     /**
+     * Generate Developer Guide content
+     */
+    generateDeveloperGuideContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Developer Guide
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Development Setup
+
+${inputs.map(input => `
+### ${input.path}
+
+Developer documentation from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## Development Guidelines
+
+This documentation was generated from the following development sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies
+3. Follow the setup instructions in the source files
+4. Run tests to verify your setup
+
+## Contributing
+
+Please refer to the source documentation files for detailed contributing guidelines.
+`;
+    }
+    /**
+     * Generate Changelog content
+     */
+    generateChangelogContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Changelog
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Version History
+
+${inputs.map(input => `
+### ${input.path}
+
+Changelog from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## Release Notes
+
+This changelog was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Latest Changes
+
+Please refer to the source changelog files for detailed version history and release notes.
+`;
+    }
+    /**
+     * Generate content based on documentation type
+     */
+    generateContentByType(request, inputType) {
+        switch (inputType) {
+            case 'developer-guide':
+                return this.generateDeveloperGuideContent(request);
+            case 'changelog':
+                return this.generateChangelogContent(request);
+            case 'product-overview':
+                return this.generateProductOverviewContent(request);
+            case 'architecture':
+                return this.generateArchitectureContent(request);
+            case 'user-guide':
+                return this.generateUserGuideContent(request);
+            case 'security':
+                return this.generateSecurityContent(request);
+            case 'onboarding':
+                return this.generateOnboardingContent(request);
+            case 'monitoring':
+                return this.generateMonitoringContent(request);
+            default:
+                return this.generateMarkdownContent(request);
+        }
+    }
+    /**
+     * Get filename for documentation type and format
+     */
+    getFilenameForDocType(inputType, format) {
+        const typeMap = {
+            'developer-guide': 'developer-guide',
+            'changelog': 'changelog',
+            'product-overview': 'product-overview',
+            'architecture': 'architecture',
+            'user-guide': 'user-guide',
+            'security': 'security',
+            'onboarding': 'onboarding',
+            'monitoring': 'monitoring',
+            'openapi': 'api',
+            'jsdoc': 'api',
+            'python-docstring': 'api',
+            'go-doc': 'api',
+            'graphql': 'api'
+        };
+        const baseName = typeMap[inputType] || 'api';
+        // Handle UML format with appropriate extension
+        if (format === 'uml') {
+            return `${baseName}-diagram.uml`;
+        }
+        return `${baseName}.${format}`;
+    }
+    /**
+     * Generate Product Overview content
+     */
+    generateProductOverviewContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Product Overview
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Product Description
+
+${project.description || 'Product overview documentation'}
+
+## Key Features
+
+This documentation was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Target Users
+
+Please refer to the source documentation files for detailed product information.
+`;
+    }
+    /**
+     * Generate Architecture content
+     */
+    generateArchitectureContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Architecture Documentation
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## System Architecture
+
+${inputs.map(input => `
+### ${input.path}
+
+Architecture documentation from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## Technology Stack
+
+This architecture documentation was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Component Overview
+
+Please refer to the source architecture files for detailed system design information.
+`;
+    }
+    /**
+     * Generate User Guide content
+     */
+    generateUserGuideContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - User Guide
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Getting Started
+
+${inputs.map(input => `
+### ${input.path}
+
+User guide content from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## User Documentation
+
+This user guide was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Features and Usage
+
+Please refer to the source user guide files for detailed usage instructions.
+`;
+    }
+    /**
+     * Generate Security content
+     */
+    generateSecurityContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Security Documentation
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Security Policies
+
+${inputs.map(input => `
+### ${input.path}
+
+Security documentation from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## Compliance Information
+
+This security documentation was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Data Handling
+
+Please refer to the source security files for detailed security policies and procedures.
+`;
+    }
+    /**
+     * Generate Onboarding content
+     */
+    generateOnboardingContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Onboarding Guide
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Onboarding Process
+
+${inputs.map(input => `
+### ${input.path}
+
+Onboarding documentation from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## Training Materials
+
+This onboarding guide was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Getting Started
+
+Please refer to the source onboarding files for detailed training and onboarding procedures.
+`;
+    }
+    /**
+     * Generate Monitoring content
+     */
+    generateMonitoringContent(request) {
+        const project = request.project;
+        const inputs = request.inputs;
+        return `# ${project.name} - Monitoring & Operations
+
+**Version:** ${project.version}  
+**Generated:** ${new Date().toLocaleString()}
+
+## Monitoring Setup
+
+${inputs.map(input => `
+### ${input.path}
+
+Monitoring documentation from ${input.path}
+
+**Source:** ${input.type}  
+**File:** ${input.path}
+`).join('')}
+
+## Operations Guide
+
+This monitoring documentation was generated from the following sources:
+${inputs.map(input => `- ${input.path} (${input.type})`).join('\n')}
+
+## Performance Monitoring
+
+Please refer to the source monitoring files for detailed operational procedures and monitoring setup.
+`;
+    }
+    /**
+     * Generate UML content based on documentation type
+     */
+    generateUMLContent(request, inputType) {
+        const UMLGenerator = require('../../generators/formats/uml-generator').default;
+        const generator = new UMLGenerator();
+        // Determine UML format and diagram type based on input type
+        let options;
+        switch (inputType) {
+            case 'architecture':
+                options = { format: 'mermaid', diagramType: 'architecture' };
+                break;
+            case 'developer-guide':
+                options = { format: 'mermaid', diagramType: 'flowchart' };
+                break;
+            case 'api':
+                options = { format: 'mermaid', diagramType: 'sequence' };
+                break;
+            case 'user-guide':
+                options = { format: 'mermaid', diagramType: 'flowchart' };
+                break;
+            case 'security':
+                options = { format: 'mermaid', diagramType: 'sequence' };
+                break;
+            case 'monitoring':
+                options = { format: 'mermaid', diagramType: 'sequence' };
+                break;
+            default:
+                options = { format: 'mermaid', diagramType: 'flowchart' };
+        }
+        return generator.generate(request, options);
+    }
+    /**
      * Get command help text
      */
     static getHelpText() {
@@ -313,7 +761,10 @@ ARGUMENTS:
 OPTIONS:
   -c, --config <file>        Configuration file path
   -o, --output <dir>         Output directory (default: ./docs)
-  -f, --format <format>      Output format(s): markdown, html, pdf, json
+  -f, --format <format>      Output format(s): markdown, html, pdf, json, uml
+      --doc-type <type>      Documentation type: api, developer-guide, changelog,
+                             product-overview, architecture, user-guide, security,
+                             onboarding, monitoring (default: api)
       --ai                   Enable AI summarization (default: true)
       --no-ai                Disable AI summarization
       --validate             Validate output (default: true)
@@ -328,6 +779,9 @@ OPTIONS:
 EXAMPLES:
   api-doc-gen generate openapi.yaml
   api-doc-gen generate --format markdown,html --output ./docs api.yaml
+  api-doc-gen generate --doc-type developer-guide --format html CONTRIBUTING.md
+  api-doc-gen generate --doc-type changelog --format markdown CHANGELOG.md
+  api-doc-gen generate --doc-type architecture --format uml ARCHITECTURE.md
   api-doc-gen generate --config ./config.json --ai src/**/*.ts
   api-doc-gen generate --dry-run --verbose openapi.yaml
     `;

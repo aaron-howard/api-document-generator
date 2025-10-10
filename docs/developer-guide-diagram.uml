@@ -1,0 +1,39 @@
+flowchart TD
+    A[Clone Repository] --> B[Install Dependencies]
+    B --> C[Read Documentation]
+    C --> D{First Time Setup?}
+    D -->|Yes| E[Configure Environment]
+    D -->|No| F[Pull Latest Changes]
+    E --> G[Set up IDE]
+    G --> H[Run Initial Tests]
+    H --> I[Create Feature Branch]
+    F --> I
+    I --> J[Write Code]
+    J --> K[Write Tests]
+    K --> L[Run Tests]
+    L --> M{Tests Pass?}
+    M -->|No| N[Fix Test Failures]
+    N --> L
+    M -->|Yes| O[Commit Changes]
+    O --> P[Push to Remote]
+    P --> Q[Create Pull Request]
+    Q --> R{Code Review Approved?}
+    R -->|No| S[Address Review Comments]
+    S --> Q
+    R -->|Yes| T[Merge to Main]
+    T --> U[Deploy to Staging]
+    U --> V[Run Integration Tests]
+    V --> W{Integration Tests Pass?}
+    W -->|No| X[Fix Issues]
+    X --> U
+    W -->|Yes| Y[Deploy to Production]
+    
+    classDef startEnd fill:#4caf50,color:#fff
+    classDef process fill:#2196f3,color:#fff
+    classDef decision fill:#ff9800,color:#fff
+    classDef error fill:#f44336,color:#fff
+    
+    class A,Y startEnd
+    class B,C,E,F,G,H,I,J,K,L,O,P,Q,T,U,V process
+    class D,M,R,W decision
+    class N,S,X error

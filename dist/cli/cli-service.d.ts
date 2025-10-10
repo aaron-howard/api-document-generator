@@ -16,7 +16,7 @@ export interface GenerationRequest {
         baseUrl?: string;
     };
     inputs: Array<{
-        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql';
+        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture' | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
         path: string;
         enabled?: boolean;
         include?: string[];
@@ -24,7 +24,7 @@ export interface GenerationRequest {
         parserConfig?: Record<string, any>;
     }>;
     outputs: Array<{
-        format: 'markdown' | 'html' | 'pdf' | 'json';
+        format: 'markdown' | 'html' | 'pdf' | 'json' | 'uml';
         path: string;
         theme?: string;
         template?: string;
