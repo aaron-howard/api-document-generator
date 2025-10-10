@@ -1,0 +1,29 @@
+{
+  "project": {
+    "name": "API Documentation",
+    "version": "1.0.0",
+    "description": "API Documentation",
+    "generatedAt": "2025-10-10T00:34:01.251Z"
+  },
+  "endpoints": [
+    {
+      "path": "/api/./example-project/specs/sample-api",
+      "method": "GET",
+      "source": "openapi",
+      "file": "./example-project/specs/sample-api.yaml",
+      "description": "API endpoint from ./example-project/specs/sample-api.yaml"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "openapi",
+      "path": "./example-project/specs/sample-api.yaml",
+      "enabled": true
+    }
+  ],
+  "metadata": {
+    "totalEndpoints": 1,
+    "generatedAt": "2025-10-10T00:34:01.251Z",
+    "generator": "API Documentation Generator v1.0.0"
+  }
+}

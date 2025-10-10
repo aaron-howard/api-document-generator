@@ -9,7 +9,7 @@ import { GenerationResponse } from '../cli-service';
 export interface GenerateCommandOptions {
     config?: string;
     output?: string;
-    format?: string[];
+    format?: string | string[];
     ai?: boolean;
     validate?: boolean;
     force?: boolean;
@@ -44,6 +44,22 @@ export declare class GenerateCommand {
      * Perform the actual generation
      */
     private performGeneration;
+    /**
+     * Generate HTML content
+     */
+    private generateHTMLContent;
+    /**
+     * Generate Markdown content
+     */
+    private generateMarkdownContent;
+    /**
+     * Generate JSON content
+     */
+    private generateJSONContent;
+    /**
+     * Generate PDF content (simplified - would need proper PDF library)
+     */
+    private generatePDFContent;
     /**
      * Get command help text
      */

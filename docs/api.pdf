@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - API Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        h1 { color: #333; border-bottom: 2px solid #007acc; }
+        h2 { color: #555; margin-top: 30px; }
+        .endpoint { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .method { font-weight: bold; color: #007acc; }
+        .path { font-family: monospace; background: #e8e8e8; padding: 2px 5px; }
+        .description { margin: 10px 0; }
+        .meta { font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>API Documentation API Documentation</h1>
+    <div class="meta">
+        <p><strong>Version:</strong> 1.0.0</p>
+        <p><strong>Generated:</strong> 10/9/2025, 7:34:01 PM</p>
+    </div>
+    
+    <h2>API Endpoints</h2>
+    
+        <div class="endpoint">
+            <div class="method">GET</div>
+            <div class="path">/api/./example-project/specs/sample-api</div>
+            <div class="description">API endpoint from ./example-project/specs/sample-api.yaml</div>
+        </div>
+    
+    
+    <h2>Input Sources</h2>
+    <ul>
+        <li><strong>openapi:</strong> ./example-project/specs/sample-api.yaml</li>
+    </ul>
+</body>
+</html>
