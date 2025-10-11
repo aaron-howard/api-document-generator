@@ -262,6 +262,13 @@ export class ParserService {
       console.warn('GraphQL parser not available:', (error as Error).message);
     }
 
+    try {
+      const ExpressParser = (await import('./languages/express-parser')).default;
+      this.registry.register('express', new ExpressParser());
+    } catch (error) {
+      console.warn('Express parser not available:', (error as Error).message);
+    }
+
     // Register new documentation parsers
     try {
       const DeveloperGuideParser = (await import('./languages/developer-guide-parser')).default;
@@ -491,7 +498,7 @@ export class ParserService {
       throw new ParseError('Source path is required', 'MISSING_PATH');
     }
 
-    const validTypes = ['openapi', 'jsdoc', 'python-docstring', 'go-doc', 'graphql'];
+    const validTypes = ['openapi', 'jsdoc', 'python-docstring', 'go-doc', 'graphql', 'express'];
     if (!validTypes.includes(request.type)) {
       throw new ParseError(`Invalid parser type: ${request.type}`, 'INVALID_TYPE');
     }

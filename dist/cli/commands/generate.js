@@ -150,8 +150,11 @@ class GenerateCommand {
             'routes',
             'route',
             'app.js',
+            'app.ts',
             'server.js',
+            'server.ts',
             'index.js',
+            'index.ts',
             'express'
         ];
         const lowerInput = input.toLowerCase();

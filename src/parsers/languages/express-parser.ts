@@ -63,6 +63,12 @@ export class ExpressParser implements IParser {
       return false;
     }
 
+    // For directory parsing, we can handle it
+    if (request.source === 'directory') {
+      return true;
+    }
+
+    // For file parsing, check file extension
     const path = request.path.toLowerCase();
     return this.supportedExtensions.some(ext => path.endsWith(ext));
   }
@@ -75,31 +81,42 @@ export class ExpressParser implements IParser {
     const startTime = Date.now();
 
     try {
-      // Load and parse the source file
-      const source = await this.loadSource(request);
-      
-      // Check if this is an Express.js file
-      if (!this.detectExpressApp(source)) {
-        return {
-          status: 'failed',
-          parseId,
-          errors: [{
-            status: 'error',
-            code: 'NOT_EXPRESS_APP',
-            message: 'File does not appear to contain Express.js application code',
-            details: { path: request.path }
-          }]
-        };
+      let expressApps: ExpressApp[] = [];
+
+      if (request.source === 'directory') {
+        // Handle directory parsing
+        expressApps = await this.parseDirectory(request);
+      } else {
+        // Handle single file parsing
+        const source = await this.loadSource(request);
+        
+        // Check if this is an Express.js file
+        if (!this.detectExpressApp(source)) {
+          return {
+            status: 'failed',
+            parseId,
+            errors: [{
+              status: 'error',
+              code: 'NOT_EXPRESS_APP',
+              message: 'File does not appear to contain Express.js application code',
+              details: { path: request.path }
+            }]
+          };
+        }
+
+        // Parse TypeScript/JavaScript AST
+        const sourceFile = this.createSourceFile(request.path, source);
+        
+        // Extract Express routes and middleware
+        const expressApp = this.extractExpressApp(sourceFile, request.path);
+        expressApps = [expressApp];
       }
 
-      // Parse TypeScript/JavaScript AST
-      const sourceFile = this.createSourceFile(request.path, source);
-      
-      // Extract Express routes and middleware
-      const expressApp = this.extractExpressApp(sourceFile, request.path);
+      // Merge all Express apps into one
+      const mergedApp = this.mergeExpressApps(expressApps);
       
       // Convert to standardized AST
-      const ast = await this.convertToAST(expressApp, request);
+      const ast = await this.convertToAST(mergedApp, request);
 
       const endTime = Date.now();
       const parseTime = (endTime - startTime) / 1000;
@@ -119,7 +136,7 @@ export class ExpressParser implements IParser {
           endpointCount: ast.endpoints.length,
           schemaCount: ast.schemas.length,
           parseTime,
-          fileSize: source.length
+          fileSize: this.calculateTotalFileSize(expressApps)
         }
       };
 
@@ -498,6 +515,89 @@ export class ExpressParser implements IParser {
         }
       } as any
     ];
+  }
+
+  /**
+   * Parse directory of Express.js files
+   */
+  private async parseDirectory(request: ParseRequest): Promise<ExpressApp[]> {
+    const expressApps: ExpressApp[] = [];
+    const files = await this.getTypeScriptFiles(request.path);
+
+    for (const filePath of files) {
+      try {
+        const source = await fs.readFile(filePath, 'utf-8');
+        
+        // Check if this is an Express.js file
+        if (this.detectExpressApp(source)) {
+          const sourceFile = this.createSourceFile(filePath, source);
+          const expressApp = this.extractExpressApp(sourceFile, filePath);
+          expressApps.push(expressApp);
+        }
+      } catch (error) {
+        console.warn(`Failed to parse file ${filePath}:`, error);
+        // Continue with other files
+      }
+    }
+
+    return expressApps;
+  }
+
+  /**
+   * Get all TypeScript/JavaScript files in directory
+   */
+  private async getTypeScriptFiles(dirPath: string): Promise<string[]> {
+    const files: string[] = [];
+    
+    const readDir = async (currentPath: string): Promise<void> => {
+      const items = await fs.readdir(currentPath);
+      
+      for (const item of items) {
+        const fullPath = path.join(currentPath, item);
+        const stat = await fs.stat(fullPath);
+        
+        if (stat.isDirectory()) {
+          // Recursively search subdirectories if recursive is enabled
+          await readDir(fullPath);
+        } else if (stat.isFile()) {
+          const ext = path.extname(item).toLowerCase();
+          if (this.supportedExtensions.includes(ext)) {
+            files.push(fullPath);
+          }
+        }
+      }
+    };
+
+    await readDir(dirPath);
+    return files;
+  }
+
+  /**
+   * Merge multiple Express apps into one
+   */
+  private mergeExpressApps(apps: ExpressApp[]): ExpressApp {
+    const mergedApp: ExpressApp = {
+      name: 'Merged Express Application',
+      routes: [],
+      middleware: [],
+      errorHandlers: []
+    };
+
+    for (const app of apps) {
+      mergedApp.routes.push(...app.routes);
+      mergedApp.middleware.push(...app.middleware);
+      mergedApp.errorHandlers.push(...app.errorHandlers);
+    }
+
+    return mergedApp;
+  }
+
+  /**
+   * Calculate total file size for multiple apps
+   */
+  private calculateTotalFileSize(apps: ExpressApp[]): number {
+    // This is a rough estimate - in a real implementation you'd track actual file sizes
+    return apps.length * 1000; // Placeholder
   }
 
   /**
