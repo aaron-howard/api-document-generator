@@ -16,7 +16,7 @@ export interface GenerationRequest {
         baseUrl?: string;
     };
     inputs: Array<{
-        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture' | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
+        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'express' | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture' | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
         path: string;
         enabled?: boolean;
         include?: string[];
@@ -61,7 +61,7 @@ export interface GenerationResponse {
 }
 export interface ValidationRequest {
     inputs: Array<{
-        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql';
+        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'express';
         path: string;
         enabled?: boolean;
     }>;
@@ -83,11 +83,11 @@ export interface ValidationResponse {
 }
 export interface DiffRequest {
     oldVersion: {
-        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql';
+        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'express';
         path: string;
     };
     newVersion: {
-        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql';
+        type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'express';
         path: string;
     };
     options?: {

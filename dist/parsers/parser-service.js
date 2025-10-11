@@ -168,6 +168,13 @@ class ParserService {
         catch (error) {
             console.warn('Changelog parser not available:', error.message);
         }
+        try {
+            const ExpressParser = (await Promise.resolve().then(() => __importStar(require('./languages/express-parser')))).default;
+            this.registry.register('express', new ExpressParser());
+        }
+        catch (error) {
+            console.warn('Express parser not available:', error.message);
+        }
         this.initialized = true;
     }
     /**

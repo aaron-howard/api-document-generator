@@ -34,6 +34,10 @@ export declare class GenerateCommand {
      */
     private detectInputType;
     /**
+     * Check if file looks like an Express.js application
+     */
+    private looksLikeExpressFile;
+    /**
      * Get default file paths for documentation type
      */
     private getDefaultPathsForDocType;

@@ -123,6 +123,10 @@ class GenerateCommand {
             return 'openapi';
         }
         if (ext.endsWith('.js') || ext.endsWith('.ts')) {
+            // Check if this looks like an Express.js file
+            if (this.looksLikeExpressFile(path)) {
+                return 'express';
+            }
             return 'jsdoc';
         }
         if (ext.endsWith('.py')) {
@@ -136,6 +140,22 @@ class GenerateCommand {
         }
         // Default to OpenAPI for API documentation
         return 'openapi';
+    }
+    /**
+     * Check if file looks like an Express.js application
+     */
+    looksLikeExpressFile(input) {
+        // Simple heuristic: check if path contains common Express patterns
+        const expressPatterns = [
+            'routes',
+            'route',
+            'app.js',
+            'server.js',
+            'index.js',
+            'express'
+        ];
+        const lowerInput = input.toLowerCase();
+        return expressPatterns.some(pattern => lowerInput.includes(pattern));
     }
     /**
      * Get default file paths for documentation type

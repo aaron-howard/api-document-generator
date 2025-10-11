@@ -10,7 +10,7 @@ import { DataModel } from '../core/models/schema';
  * Parser Service API request/response interfaces based on parser-service.yaml contract
  */
 export interface ParseRequest {
-    type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture' | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
+    type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'express' | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture' | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
     source: 'file' | 'directory' | 'url' | 'content';
     path: string;
     options?: {

@@ -12,7 +12,7 @@ import { DataModel } from '../core/models/schema';
  * Parser Service API request/response interfaces based on parser-service.yaml contract
  */
 export interface ParseRequest {
-  type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql'
+  type: 'openapi' | 'jsdoc' | 'python-docstring' | 'go-doc' | 'graphql' | 'express'
     | 'developer-guide' | 'changelog' | 'product-overview' | 'architecture'
     | 'user-guide' | 'security' | 'onboarding' | 'monitoring';
   source: 'file' | 'directory' | 'url' | 'content';
@@ -275,6 +275,13 @@ export class ParserService {
       this.registry.register('changelog', new ChangelogParser());
     } catch (error) {
       console.warn('Changelog parser not available:', (error as Error).message);
+    }
+
+    try {
+      const ExpressParser = (await import('./languages/express-parser')).default;
+      this.registry.register('express', new ExpressParser());
+    } catch (error) {
+      console.warn('Express parser not available:', (error as Error).message);
     }
     
     this.initialized = true;
